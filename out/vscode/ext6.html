@@ -1,0 +1,164 @@
+<html><head><title>VSCode 扩展开发(六) 用户设置</title></head><body><h2>学习目标</h2>
+
+<p>经过本节，你将了解如何给你的扩展添加用户设置选项。</p>
+
+<h2>开篇寒暄</h2>
+
+<p>一个优秀的插件需要给用户很多可配置的选项，让用户决定使用哪些功能，而不是把所有功能都给写死在代码中，VSCode当然提供了这个功能，我们看看怎么使用吧。</p>
+
+<h2>开始</h2>
+
+<p>关于用户设置的配置，我们全部都在<code>package.json</code>中的<code>contributes.configuration</code>节点里配置，并且我们只需要在TypeScript代码中通过<code>vscode.workspace.getConfiguration</code>引用即可。</p>
+
+<p>我们现在开始尝试给之前的bf解释器加一些可选项，复制上一章的代码，本章代码在<a href="https://github.com/YHaoNan/vscode-tutorial/tree/master/vsc-extensions-tutorial-6">这里</a></p>
+
+<p>我决定加入三个选项，一个是是否开启运算符计数功能，第二个是是否开启自动完成功能，第三个是是否开启循环跳转功能。</p>
+
+<pre><code class="language-json">&#34;configuration&#34;:{
+    &#34;title&#34;: &#34;Brainfuck Plugin User Settings&#34;,
+    &#34;properties&#34;: {
+        &#34;bf.openOptCounter&#34;:{
+            &#34;type&#34;: &#34;boolean&#34;,
+            &#34;default&#34;: true,
+            &#34;description&#34;: &#34;Whether open the operator counter&#34;
+        },
+        &#34;bf.openAutoComplete&#34;:{
+            &#34;type&#34;: &#34;boolean&#34;,
+            &#34;default&#34;: true,
+            &#34;description&#34;: &#34;Whether open the auto compelete&#34;
+        },
+        &#34;bf.openLoopJump&#34;: {
+            &#34;type&#34;: &#34;boolean&#34;,
+            &#34;default&#34;: true,
+            &#34;description&#34;: &#34;Whether open the loop jump&#34;
+        }
+    }
+}
+</code></pre>
+
+<p>如上代码配置了我们需要的功能，<code>properties</code>中包含的的每一个子节点是一个选项，其id就是每一个节点的节点名，如<code>bf.openOptCounter</code>。</p>
+
+<p>我们运行插件，打开设置就能看到我们提供的设置项了。</p>
+
+<p><img src="http://nsimg.cn-bj.ufileos.com/img-1559963277078.png" alt="img"/></p>
+
+<p>当然，也可以在json中配置。</p>
+
+<p><img src="http://nsimg.cn-bj.ufileos.com/img-1559963393773.png" alt="img"/></p>
+
+<p>然后我们就可以在代码中判断选项是否开启，然后根据用户的设置来决定功能是否开启。</p>
+
+<p>hover.ts</p>
+
+<pre><code class="language-typescript">import * as vscode from &#39;vscode&#39;
+import { disconnect } from &#39;cluster&#39;;
+import * as util from &#39;./util&#39;;
+
+
+export class BrainfuckHoverProvider implements vscode.HoverProvider{
+    provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult&lt;vscode.Hover&gt; {
+        const opt = document.lineAt(position.line).text.charAt(position.character);
+        const wordRange = document.getWordRangeAtPosition(position,new RegExp(&#39;\\&#39;+opt+&#39;+&#39;));
+        //判断选项是否开启
+        if((opt==&#39;+&#39; || opt==&#39;-&#39;)&amp;&amp;vscode.workspace.getConfiguration().get&lt;boolean&gt;(&#39;bf.openOptCounter&#39;))
+            return wordRange?new vscode.Hover(new vscode.MarkdownString(&#39;### BF Opt Counter  \n\n * **Opt: `&#39;+opt+&#39;`**\n\n* **Length: `&#39;+(wordRange.end.character-wordRange.start.character)+&#39;`**&#39;)):null;
+        else if((opt==&#39;[&#39; || opt==&#39;]&#39;)&amp;&amp;vscode.workspace.getConfiguration().get&lt;boolean&gt;(&#39;bf.openLoopJump&#39;)){
+            const map = util.getLoopOptPairMap(document);
+            const target = util.getMatchedOpt(map,position);
+            if(target)
+                return wordRange?new vscode.Hover(new vscode.MarkdownString(&#39;### Loop Opt Pair\n\n* **Matched: `&#39;+target.character+&#39;`**, press ctrl and click to jump here.&#39;)):null;
+        }
+    }
+
+}
+
+</code></pre>
+
+<p>definition.ts</p>
+
+<pre><code class="language-typescript">import * as vscode from &#39;vscode&#39;;
+import * as util from &#39;./util&#39;;
+
+
+export class BrainfuckDefinitionProvider implements vscode.DefinitionProvider{
+    provideDefinition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult&lt;vscode.Location | vscode.Location[] | vscode.LocationLink[]&gt; {
+        if(vscode.workspace.getConfiguration().get&lt;boolean&gt;(&#39;bf.openLoopJump&#39;)){
+            const char = document.lineAt(position.line).text.charAt(position.character);
+            console.log(char);
+            if(char != &#39;[&#39; &amp;&amp; char != &#39;]&#39;)return null;
+            const map = util.getLoopOptPairMap(document);
+            const target = util.getMatchedOpt(map,position);
+            if(target)
+                return new vscode.Location(document.uri,target);
+        }
+    }
+}
+</code></pre>
+
+<p>autocomplete.ts</p>
+
+<pre><code class="language-typescript">import * as vscode from &#39;vscode&#39;;
+import { CompletionItem } from &#39;vscode-debugadapter&#39;;
+import { stringify } from &#39;querystring&#39;;
+
+const SUPPORT_OPT = [&#39;\\+&#39;,&#39;\\-&#39;];
+
+
+
+export class BrainfuckCompletionItemProvider implements vscode.CompletionItemProvider{
+    provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult&lt;vscode.CompletionItem[] | vscode.CompletionList&gt; {
+        
+        if(!vscode.workspace.getConfiguration().get&lt;boolean&gt;(&#39;bf.openAutoComplete&#39;)) return;
+        var completion: vscode.CompletionItem | undefined;
+        //当前行文本
+        const currentLineText = document.lineAt(position.line).text;
+        //当前单词第一个字符位置 position.character中的下标指向的实际上是关键字的下一个(不知道这么说准确不准确)
+        const currentTokenFisrtCharIndex = findCurrentTokenFirstCharIndex(currentLineText,position.character-1);
+        //当前单词
+        const currentToken = currentLineText.substr(currentTokenFisrtCharIndex,position.character-currentTokenFisrtCharIndex);
+
+        //针对所有支持的操作符(其实就+和-)构造正则表达式 并验证当前单词是否匹配
+        SUPPORT_OPT.map(opt=&gt;&#39;^(\\d+)(&#39;+opt+&#39;{1})$&#39;).forEach(regex=&gt;{
+            const matched = currentToken.match(regex);
+            //如果匹配了就构造CompletionItem
+            if(matched!=null) {
+                //插入的文本 将关键字重复x次得出的结果，比如 5+ 则是 +++++
+                const insertText = matched[2].repeat(parseInt(matched[1]));
+                //创建CompletionItem 它所显示的标题为当前单词 比如 5+
+                completion = new vscode.CompletionItem(currentToken);
+                //这个是文档，我直接设置成了insertText
+                completion.documentation = insertText; 
+                //这个是显示出来的解释信息
+                completion.detail = &#39;Insert &#39;+matched[1] +&#39; &#39; + matched[2];
+                //这个是插入的文字，支持SnippetString
+                completion.insertText = insertText;
+                //替换范围 这里设成了从当前单词第第一个位置到当前单词的最后一个位置
+                completion.range = new vscode.Range(position.line,currentTokenFisrtCharIndex,position.line,position.character);
+                
+            }
+        });
+        return completion?Promise.resolve(new vscode.CompletionList([completion], true)):null;
+    }
+
+    
+}
+
+function findCurrentTokenFirstCharIndex(text: string,position: number):number{
+    while(position&gt;0&amp;&amp;text.charAt(position)!=&#39; &#39;)
+        position--;
+    return text.charAt(position)==&#39; &#39;?position+1:position;
+}
+</code></pre>
+
+<p>用户设置还支持如下类型：<code>string</code>、<code>array</code>、<code>number</code>、<code>boolean</code>、<code>object</code>、<code>integer</code>、<code>null</code>。</p>
+
+<p><strong><a href="/post/vscode-ext1#目录">点此返回目录</a></strong></p>
+
+<hr/>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="https://code.visualstudio.com/api/references/contribution-points#contributes.configuration">contributes.configuration</a></li>
+</ul>
+</body></html>

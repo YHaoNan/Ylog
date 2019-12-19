@@ -1,0 +1,508 @@
+<html><head><title>VSCode 扩展开发(四) Output、自动完成和Snippets</title></head><body><h2>学习目标</h2>
+
+<p>本章通过一个小例子，对如何使用VSCode API操作OutputChannel，如何构建一个类似Emmet的智能代码生成器和一些Snippets方面的内容进行了讲解。</p>
+
+<h2>开篇寒暄</h2>
+
+<p>我们平常使用编辑器，最常用到的两个东西就是控制台和编辑器，开发插件的时候我们也有大部分需求是要操作它们的。所以了解如何操作它们是非常重要的一件事。</p>
+
+<h2>OutputChannel</h2>
+
+<p>Debug的时候，如果逻辑不是很复杂，不是很难发现Bug，我们基本上就会直接采用控制台输出的方式找问题，而不会去采用BreakPoint。<br/>
+除了调试信息，一些日志信息也会被我们输出到控制台，方便我们观察程序的运行轨迹，所以控制台可是我们的好伙伴哦。如果你说你没用过控制台，那真的是没人会信。</p>
+
+<p>试想，如果我们再为一门语言设计VSCode插件，让它能脱离终端，直接在VSCode中运行，那么我们就要把每次执行程序所有输出的信息都放到VSCode的Output面板中。</p>
+
+<p>那它究竟怎么用呢？我们来新建一个项目看看，地址：<a href="https://github.com/YHaoNan/vscode-tutorial/tree/master/vsc-extensions-tutorial-4">这里</a></p>
+
+<h3>创建OutputChannel、添加信息</h3>
+
+<p><strong>注意：以后关于<code>package.json</code>中的声明Command，我基本上会省略，除非有新东西需要配置。各位自行去声明。</strong></p>
+
+<p>我们可以通过VSCode的<code>vscode.window.createOutputChannel</code>去创建一个输出面板。如下：</p>
+
+<pre><code class="language-typescript">context.subscriptions.push(
+    vscode.commands.registerCommand(&#39;extension.runBrainfuck&#39;,()=&gt;{
+        const output = vscode.window.createOutputChannel(&#39;BrainFuck Interpreter&#39;);
+    })
+);
+</code></pre>
+
+<p>我们向方法中传递一个字符串，这是输出面板的名称，然后我们就可以引用<code>output</code>对象对面板进行操作了。</p>
+
+<p>VSCode的OutputChannel提供了如下API：</p>
+
+<h5>属性</h5>
+
+<ul>
+<li><p>name: string</p>
+
+<h5>方法</h5></li>
+
+<li><p>append(value: string): void<br/>
+向输出面板中添加字符串</p></li>
+
+<li><p>appendLine(value: string): void<br/>
+向输出面板中添加字符串并自动换行</p></li>
+
+<li><p>clear(): void<br/>
+清空输出面板中的内容</p></li>
+
+<li><p>dispose(): void<br/>
+处理和释放相关资源</p></li>
+
+<li><p>hide(): void<br/>
+隐藏面板</p></li>
+
+<li><p>show(preserveFocus?:boolean): void<br/>
+显示面板<br/>
+当preserveFocus为true的时候不获取焦点</p></li>
+
+<li><p><del>show(column?:ViewColumn,preserveFocus?:boolean): void</del><br/>
+方法已经过时</p></li>
+</ul>
+
+<p>我们尝试着往输出面板中输出几行信息。</p>
+
+<pre><code class="language-typescript">context.subscriptions.push(
+    vscode.commands.registerCommand(&#39;extension.runBrainfuck&#39;,()=&gt;{
+        const output = vscode.window.createOutputChannel(&#39;BrainFuck Interpreter&#39;);
+        output.show();
+        output.append(&#39;Helo &#39;);
+        output.appendLine(&#39;vsc~&#39;);
+        output.appendLine(&#39;Helo vsc~&#39;);
+        output.append(&#39;Helo Helo~&#39;)
+    })
+);
+</code></pre>
+
+<p>得出如下结果：</p>
+
+<pre><code>Helo vsc~
+Helo vsc~
+Helo Helo~
+</code></pre>
+
+<p>可以说明，append确实是不换行的，而appendLine只是在末尾换行，如果前面用的是append，并且没有换行符的话，appendLine并不会另起一行。</p>
+
+<p>光是这么学不好玩，我们来设计一门语言的VSCode插件，并使用Output面板输出运行结果。什么？你问我设计什么语言的？不知道你听没听过BrainFuck，如果没听过请走<a href="https://segmentfault.com/a/1190000000395225?utm_source=tuicool&amp;utm_medium=referral">这边</a>。</p>
+
+<p><em>PS:以下可能需要一些Brainfuck的知识和一定的阅读源码能力</em></p>
+
+<p>关于Brainfuck(以后简称bf)解释器，由于时间关系，我没有自己写，而是引用了一个开源的基于TypeScript的解释器<code>brnfck</code>，repo在<a href="https://github.com/tobiasholler/brnfck">这里</a>。</p>
+
+<p>我们分析一下这个解释器的运行原理，整个解释器源码不多：</p>
+
+<pre><code class="language-typescript">import { TextDecoder } from &#34;util&#34;;
+import { OutputChannel } from &#34;vscode&#34;;
+function compileBrainfuck(code: string): string {
+    let compiledCode: string = &#34;(function(r,w){var i=0;var t=new Uint8Array(30000);&#34;
+    let i: number
+    let countChars = function (char: string) {
+        let c = 0
+        while (code.charAt(i) == char) {
+            c++
+            i++
+        }
+        i--
+        return c
+    }
+    for (i = 0; i &lt; code.length; i++) {
+        switch (code.charAt(i)) {
+            case &#34;&lt;&#34;:
+                compiledCode += &#34;i-=&#34; + countChars(&#34;&lt;&#34;) + &#34;;&#34;
+                break;
+            case &#34;&gt;&#34;:
+                compiledCode += &#34;i+=&#34; + countChars(&#34;&gt;&#34;) + &#34;;&#34;
+                break;
+            case &#34;+&#34;:
+                compiledCode += &#34;t[i]+=&#34; + countChars(&#34;+&#34;) + &#34;;&#34;
+                break;
+            case &#34;-&#34;:
+                compiledCode += &#34;t[i]-=&#34; + countChars(&#34;-&#34;) + &#34;;&#34;
+                break;
+            case &#34;.&#34;:
+                compiledCode += &#34;w(t[i]);&#34;
+                break;
+            case &#34;,&#34;:
+                compiledCode += &#34;t[i]=r();&#34;
+                break;
+            case &#34;[&#34;:
+                compiledCode += &#34;while(t[i]!=0){&#34;
+                break;
+            case &#34;]&#34;:
+                compiledCode += &#34;}&#34;
+                break;
+        }
+    }
+    return compiledCode + &#34;return t;})&#34;
+}
+
+export function compileBrainfuckToFunction(code: string): (readFunction: () =&gt; number, writeFunction: (byte: number) =&gt; void) =&gt; Uint8Array {
+    return eval(compileBrainfuck(code))
+}
+
+//由于用不到该方法所以不用管它
+// export function compileBrainfuckToStandalone(code: string): string {
+//     return &#39;#!/usr/bin/env node\n(function(){var a=0;&#39; + compileBrainfuck(code) + &#39;(function(){try{return process.argv[2].charCodeAt(a++);}catch(e){return 0;}},function(b){process.stdout.write(String.fromCharCode(b))});})();&#39;
+// }
+</code></pre>
+
+<p>我们可以看出这个哥们儿写的代码确实很有趣，它并没有采用大多数人的直接对bf源码进行解释执行的方法，而是利用脚本语言的特性，将bf翻译成了JS代码，并且提供读写方法供外界接入。</p>
+
+<p>它提供了<code>compileBrainfuck</code>方法把bf代码转换成字符串类型的JavaScript代码的字符串，并且通过<code>compileBrainfuckToFunction</code>方法调用eval来执行它，执行它后会返回一个签名为<code>(readFunction: () =&gt; number, writeFunction: (byte: number) =&gt; void) =&gt; Uint8Array</code>的Function，它有两个参数，第一个是读取方法，也就是bf需要从控制台读取一个字符时会回调的方法，你需要返回该字符在字符表中的位置，第二个方法是写入方法，改方法是bf需要向控制台输出一个字符时的回调方法，输出的字符就是那个<code>byte: number</code>，是该字符在字符表中的位置。</p>
+
+<p>仔细的看一下，如果我们有这样一段bf源码：</p>
+
+<pre><code>++++++ [ &gt; ++++++++++ &lt; - ] &gt; +++++ .
+</code></pre>
+
+<p>则它最终会变成这样的js代码：</p>
+
+<pre><code class="language-javascript">//为了方便阅读我加上了换行，实际生成的方法是没有换行的。
+(function(r,w){var i=0;var t=new Uint8Array(30000);
+t[i]+=6;
+while(t[i]!=0){
+    i+=1;
+    t[i]=10;
+    i-=1;
+    t[i]-=1;
+}
+t+=1;
+t[i]+=5;
+w(t[i]);
+return t;})
+</code></pre>
+
+<p>现在请用你的人脑作为JS解释器，猜猜执行到最后<code>t[i]</code>是什么？其实最后i就是在第二个单元，也就是<code>t[1]</code>中循环6次，每次加10，最后再加5对吧，而且用<code>t[0]</code>作为循环条件，那么最后的<code>t[1]</code>一定是65。那么65对应的字符就是“A”，所以调用<code>w(t[i])</code>就应该在控制台输出A。</p>
+
+<p>分析完了这个解释器，我们开始考虑插件的事，输出方法中我们正好可以直接调用OutputChannel的append方法进行输出，但是关于输入，因为OutputChannel不支持，我们先不考虑，让它一直返回0。于是我们创建了一个<code>coderunner.ts</code>，写入了如下代码：</p>
+
+<pre><code class="language-typescript">
+import * as vscode from &#39;vscode&#39;;
+import * as bf from &#39;./brainfuck&#39;
+export function runCode(code: string,outputChannel: vscode.OutputChannel){
+    bf.compileBrainfuckToFunction(code)(()=&gt;{return 0},(byte:number)=&gt;{
+        outputChannel.append(String.fromCharCode(byte));
+    });
+}
+</code></pre>
+
+<p>然后在<code>extensions.ts</code>中这样调用它：</p>
+
+<pre><code class="language-typescript">import * as vscode from &#39;vscode&#39;;
+import * as fs from &#39;fs&#39;;
+import * as runner from &#39;./coderunner&#39;
+
+export function activate(context: vscode.ExtensionContext) {
+	context.subscriptions.push(
+		vscode.commands.registerCommand(&#39;extension.runBrainfuck&#39;,(path)=&gt;{
+			const outputChannel = vscode.window.createOutputChannel(&#39;BrainFuck Interpreter&#39;);
+			outputChannel.show();
+			try{
+				const sourceCode = fs.readFileSync(path.path).toString();
+				runner.runCode(sourceCode,outputChannel);
+			}catch(e){
+				outputChannel.appendLine(&#39;Error:&#39;+e.message);
+			}
+		})
+	);
+}
+
+export function deactivate() {}
+</code></pre>
+
+<p>我们决定使用上一篇最后介绍的办法获得文件路径，就是给<code>registerCommand</code>方法一个参数那个，并直接使用nodejs的<code>fs</code>模块获取它的内容，并丢到<code>brainfuck-js</code>中处理。</p>
+
+<p>运行，新建一个文件，写入如下Brainfuck代码：</p>
+
+<pre><code>++++++++++[&gt;+++++++&gt;++++++++++&gt;+++&gt;+&lt;&lt;&lt;&lt;-]&gt;++.&gt;+.+++++++..+++.&gt;++.&lt;&lt;+++++++++++++++.&gt;.+++.------.--------.&gt;+.&gt;.
+</code></pre>
+
+<p>然后执行命令，会输出<code>Hello World!</code>。</p>
+
+<p><img src="http://nsimg.cn-bj.ufileos.com/img-1559694977826.png" alt="img"/></p>
+
+<h2>输入功能</h2>
+
+<p>上面的插件运行的一直不错，但是直到有一天你遇到了这样的bf代码：</p>
+
+<pre><code>&gt; , &lt; ++++ [ &gt; -------- &lt; - ] &gt; .
+</code></pre>
+
+<p>这个代码要求输入一个字符(我们假定该字符是一个小写英文字母)，然后输出该字符的大写，这时候我们的bf解释器就不好用了，因为我们的bf解释器还没有输入功能呢！</p>
+
+<p>所以，现在需要给我们的插件添加一个输入功能，但是OutputChannel是不可输入的，如果你尝试输入，它会告诉你不能在只读编辑器中输入。经过再三考虑，我们决定使用VSCode提供的<code>vscode.window.showInputBox</code>来完成这个功能。</p>
+
+<pre><code class="language-typescript">context.subscriptions.push(
+    vscode.commands.registerCommand(&#39;extension.runBrainfuck&#39;,async (path)=&gt;{
+        await vscode.window.showInputBox({prompt: &#39;Input some character&#39;}).then(input=&gt;{
+            //To make sure input is not undefined
+            input = input?input:&#39;&#39;;
+            const outputChannel = vscode.window.createOutputChannel(&#39;BrainFuck Interpreter&#39;);
+            outputChannel.show();
+            try{
+                const sourceCode = fs.readFileSync(path.path).toString();
+                const output = runner.runCode(sourceCode,input,outputChannel);
+            }catch(e){
+                outputChannel.appendLine(&#39;Error:&#39;+e.message);
+            }
+        });
+    })
+);
+</code></pre>
+
+<p>prompt是inputbox的提示信息，然后我们还需要修改<code>coderunner.runCode</code>的代码：</p>
+
+<pre><code class="language-typescript">export function runCode(code: string,input:string,outputChannel: vscode.OutputChannel){
+    var counter = 0;
+    bf.compileBrainfuckToFunction(code)(()=&gt;{
+        if(counter&lt;input.length)
+            return input.charCodeAt(counter++);
+        return 0;
+    },(byte:number)=&gt;{
+        outputChannel.append(String.fromCharCode(byte));
+    });
+}
+</code></pre>
+
+<p>因为bf中的输入和输出都是以一个字符为基准的，所以在<code>runCode</code>方法中提供一个counter用于每次取出输入中的一个字符。</p>
+
+<p>现在试着使用我们的插件运行刚刚的bf代码，会提示你输入，我们输入a，会输出大写的A。</p>
+
+<p><img src="http://nsimg.cn-bj.ufileos.com/img-1559784487604.png" alt="img"/></p>
+
+<h2>打造极致bf编码体验</h2>
+
+<p>你用这个插件开开心心的写了一周bf(谁会这么干？？xD)，但是由于bf代码的可读性实在不高，经常写写着就不知道自己写的是啥了，而且遇到连续几个相同的符号一个一个敲的时候还得在心里计数。基于以上问题，我们打算改造一下bf的编码体验。</p>
+
+<p>首先我们打算加入自动完成功能，也就是输入一小段，弹出智能提示，选中后自动补齐一大段。用于解决bf中的连续符号排列问题。我们的目标是，假如我们在编辑器中输入：</p>
+
+<pre><code>30+
+</code></pre>
+
+<p>然后按下tab，就会自动生成30个<code>+</code>出来，如果你搞过前端开发，这和前端必备插件<code>emmet</code>很像。</p>
+
+<p>这会很大程度减轻我们的工作量，而且我们不用在心里数各种bf运算符的个数了。比如这个代码：</p>
+
+<pre><code>++++++ [ &gt; ++++++++++ &lt; - ] &gt; +++++ .
+</code></pre>
+
+<p>我们的插件要达到这样的输入效果：</p>
+
+<p><img src="https://s2.ax1x.com/2019/06/06/VacDcd.gif" alt="效果"/></p>
+
+<p>是不是很炫酷呢？</p>
+
+<p>做到这个效果，需要用到<code>CompletionItemProvider</code>，我们需要在<code>extension.ts</code>中注册它：</p>
+
+<pre><code class="language-typescript">context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+        {language:  &#39;brainfuck&#39;, scheme: &#39;file&#39;},
+        new ac.BrainfuckCompletionItemProvider(),
+        &#39;+&#39;,&#39;-&#39;,&#39;[&#39;)
+);
+</code></pre>
+
+<p>首先，因为我们针对语言开发插件，所以要指定一个语言，可以看到<code>registerCompletionItemProvider</code>的第一个参数就是语言和一个scheme头。但是我估计除了咱们，没人会设计brainfuck的插件，也没人会用VSCode写brainfuck，所以VSCode肯定不会认识brainfuck是啥。所以我们需要再去<code>contributes.languages</code>中注册个语言。</p>
+
+<pre><code class="language-json">&#34;languages&#34;: [
+    {
+        &#34;id&#34;: &#34;brainfuck&#34;,
+        &#34;aliases&#34;: [&#34;Brainfuck&#34;,&#34;BrainFuck&#34;,&#34;brainfuck&#34;,&#34;bf&#34;],
+        &#34;extensions&#34;: [
+            &#34;.bf&#34;
+        ]
+    }
+]
+</code></pre>
+
+<p><code>id</code>即该语言的唯一标识，<code>aliases</code>是该语言的别名，在需要输入的地方输入别名时依旧能找到该语言，<code>extensions</code>是扩展名，我们写<code>.bf</code>。</p>
+
+<p>然后回到刚刚<code>extensions.ts</code>那里。</p>
+
+<pre><code class="language-typescript">context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+        {language:  &#39;brainfuck&#39;, scheme: &#39;file&#39;},
+        new ac.BrainfuckCompletionItemProvider(),
+        &#39;+&#39;,&#39;-&#39;,&#39;[&#39;)
+);
+</code></pre>
+
+<p>第二个参数是我们自己定义的一个<code>CompletionItemProvider</code>，这是一个用于进行代码提示和补全的Provider，VSCode的API中有很多这样的Provider，还有的用于跳转定义、弹出悬浮提示等，这类Provider一般都是要实现一个Provider子类，然后并不用去<code>package.json</code>中去声明什么的。</p>
+
+<p>第三个参数是一个可变长参数，是触发智能提示的关键字，只要在编辑器中一输入这个关键字，我们的<code>CompletionItemProvider</code>的<code>provideCompletionItems</code>方法就会被触发，VSCode需要我们在这个方法中返回一个或一些智能提示选项，然后它去展示给用户。我们定义了三个关键字分别是<code>+</code>、<code>-</code>和<code>[</code>。</p>
+
+<p>然后我们来看一下<code>provideCompletionItems</code>方法长啥样：</p>
+
+<pre><code class="language-typescript">provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext)
+
+返回值
+vscode.ProviderResult&lt;vscode.CompletionItem[] | vscode.CompletionList&gt;
+</code></pre>
+
+<p>它有四个参数，我们这里只关心第一个和第二个就好了，其他的您可以去官方文档中查看。</p>
+
+<p>第一个参数是方法被触发时当前编辑器的文档对象，我们主要用它来分析一些带有语义的东西，比如我们的<code>30+</code>，要分析出生成多少个加号。</p>
+
+<p>第二个参数则是当前输入关键字的Position对象，你可以获取到当前的行和当前的位置，主要和第一个参数配合使用。</p>
+
+<p>注意，因为我们知道VSCode的插件一开始不会被加载，得发生一定事件时被加载，比如<code>OnCommand</code>。现在我们需要当打开一个bf文件时加载插件，就需要在<code>activationEvents</code>中加入这个。</p>
+
+<pre><code class="language-json">&#34;onLanguage:brainfuck&#34;
+</code></pre>
+
+<h2>思路及实现</h2>
+
+<p>先说加和减运算符，因为这两个是最复杂的，我们把最复杂的解决了，简单的也就迎刃而解了。</p>
+
+<p>我们知道，经过我们在<code>extension.ts</code>中的注册，现在只要在编辑器中一输入<code>+</code>和<code>-</code>号的时候就会触发<code>provideCompletionItems</code>方法，所以我们只要从这里面找到前面的若干位数字，然后计算出生成的加号和减号的个数就好了。</p>
+
+<p>我们希望以单词为基本单位处理用户的输入，然后产生代码提示。</p>
+
+<p>从关键字，也就是本次输入的加号和减号的位置开始，往前寻找，一旦找到空格或者到了行首，我们就把那个位置记做起始位置，然后从一行中截取起始位置到关键字位置的字符串，作为当前的单词，比如：</p>
+
+<pre><code>abcde 56+
+</code></pre>
+
+<p>输入加号后，当前单词就是<code>56+</code>。</p>
+
+<p>但是，用户输入的单词并不一定是规则的，比如：</p>
+
+<pre><code>abcde abs56+
+</code></pre>
+
+<p>这种情况下，我们就不返回任何代码提示。</p>
+
+<p>除此之外，我发现你输入键盘上的<code>A-Z</code>或者其小写形式还有一些其他字符时，也会触发这个方法，再加上之前的不规则输入情况，为了避免错误提示，我们使用正则来判断当前单词是否符合规则，如果符合就生成并返回代码提示，否则就不做任何响应。</p>
+
+<p>那我就直接放代码了</p>
+
+<pre><code class="language-typescript">import * as vscode from &#39;vscode&#39;;
+import { CompletionItem } from &#39;vscode-debugadapter&#39;;
+import { stringify } from &#39;querystring&#39;;
+
+const SUPPORT_OPT = [&#39;\\+&#39;,&#39;\\-&#39;];
+
+
+
+export class BrainfuckCompletionItemProvider implements vscode.CompletionItemProvider{
+    provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult&lt;vscode.CompletionItem[] | vscode.CompletionList&gt; {
+        
+        
+        var completion: vscode.CompletionItem | undefined;
+        //当前行文本
+        const currentLineText = document.lineAt(position.line).text;
+        //当前单词第一个字符位置 position.character中的下标指向的实际上是关键字的下一个(不知道这么说准确不准确)
+        const currentTokenFisrtCharIndex = findCurrentTokenFirstCharIndex(currentLineText,position.character-1);
+        //当前单词
+        const currentToken = currentLineText.substr(currentTokenFisrtCharIndex,position.character-currentTokenFisrtCharIndex);
+
+        //针对所有支持的操作符(其实就+和-)构造正则表达式 并验证当前单词是否匹配
+        SUPPORT_OPT.map(opt=&gt;&#39;^(\\d+)(&#39;+opt+&#39;{1})$&#39;).forEach(regex=&gt;{
+            const matched = currentToken.match(regex);
+            //如果匹配了就构造CompletionItem
+            if(matched!=null) {
+                //插入的文本 将关键字重复x次得出的结果，比如 5+ 则是 +++++
+                const insertText = matched[2].repeat(parseInt(matched[1]));
+                //创建CompletionItem 它所显示的标题为当前单词 比如 5+
+                completion = new vscode.CompletionItem(currentToken);
+                //这个是文档，我直接设置成了insertText
+                completion.documentation = insertText; 
+                //这个是显示出来的解释信息
+                completion.detail = &#39;Insert &#39;+matched[1] +&#39; &#39; + matched[2];
+                //这个是插入的文字，支持SnippetString
+                completion.insertText = insertText;
+                //snippet执行完之后的删除操作 这里设成了从当前单词第第一个位置到当前单词的最后一个位置
+                completion.additionalTextEdits = [vscode.TextEdit.delete(new vscode.Range(position.line,currentTokenFisrtCharIndex,position.line,position.character))];
+                
+            }
+        });
+        return completion?Promise.resolve(new vscode.CompletionList([completion], true)):null;
+    }
+
+    
+}
+
+
+function findCurrentTokenFirstCharIndex(text: string,position: number):number{
+    while(position&gt;0&amp;&amp;text.charAt(position)!=&#39; &#39;)
+        position--;
+    return text.charAt(position)==&#39; &#39;?position+1:position;
+}
+</code></pre>
+
+<p><code>provideCompletionItems</code>方法返回一个<code>ProviderResult</code>，所有的Provider中的provide方法都返回一个这东西，它实际上是一个Promise，所以我们需要调用<code>Promise.resolve</code>。</p>
+
+<p>这样一来，加号和减号的智能提示就可以使用了，快去试试吧。</p>
+
+<h2>使用Snippet继续扩展</h2>
+
+<p><code>CompletionItemProvider</code>确实好用，但是有些时候用不到，一般情况下，我们有动态的代码提示需求要处理的话才会使用它，就像<code>emmet</code>。一般的，固定格式的需求我们直接用snippet就好了，Snippet就是输入一小段生成一大段的意思，比如其他语言中的生成<code>for</code>语句的Snippet，只需要输入for就把整个的循环体弄出来了。</p>
+
+<p>我们用snippet来扩展bf里的其他操作提示。</p>
+
+<p>bf中经常会看到这样的代码：</p>
+
+<pre><code>+++ [ &gt; ++++ &lt; - ] 
+</code></pre>
+
+<p>这是bf构造一个循环常用的手段，因为<code>]</code>符号在当前单元不为0的情况下会跳转到前一个<code>[</code>，而且循环里一般要控制另一个单元的值，所以一般都会在循环开始之前用一个单元作为循环控制单元，然后在循环中用<code>&gt;</code>跳到另一个单元进行累加操作，然后别忘了用<code>&lt;</code>跳回去将循环控制单元的值迭代，上面的代码为循环3次，每次为下一个单元的值加4，执行完成后，第二个单元为12。</p>
+
+<p>所以有必要写一个这样的snippet，生成这么个东西：</p>
+
+<pre><code>[ &gt; &lt; ]
+</code></pre>
+
+<p>我们在<code>package.json</code>中的<code>contributes</code>节点下添加snippets相关的配置：</p>
+
+<pre><code class="language-json">&#34;snippets&#34;: [
+    {
+        &#34;language&#34;: &#34;brainfuck&#34;,
+        &#34;path&#34;: &#34;./snippets.json&#34;
+    }
+]
+</code></pre>
+
+<p>并且在<code>categories</code>中添加一个Snippets，否则snippet不会生效。</p>
+
+<pre><code class="language-json">&#34;categories&#34;: [
+    &#34;Other&#34;,&#34;Snippets&#34;,&#34;Languages&#34;
+]
+</code></pre>
+
+<p>然后在项目根目录创建<code>snippets.json</code>，并填入如下内容：</p>
+
+<pre><code class="language-json">{
+	&#34;Bf_Jump_In_Unit_And_Loop&#34;:{
+		&#34;scope&#34;: &#34;brainfuck&#34;,
+		&#34;prefix&#34;: &#34;ul&#34;,
+		&#34;body&#34;: [
+			&#34;[ &gt; $1 &lt; $2 ]&#34;
+		],
+		&#34;description&#34;: &#34;Create a unit jump body in loop&#34;
+	}
+}
+</code></pre>
+
+<p><code>scope</code>指定snippet生效的语言，<code>prifix</code>则是前缀，这里我们用<code>ul</code>(Unit And Loop)当前缀，<code>body</code>就是选中后插入的大段代码，是一个列表，一项就是插入后的一行，我们只有一行，所以就一项。</p>
+
+<p><code>$1</code>代表位置，当你插入这个snippet后光标会跳转到<code>$1</code>的位置，当你输入完成后，按下tab就会跳转到<code>$2</code>的位置，你当然还可以设置一些提示信息，就像这样：<code>${1:tips}</code>，该位置会插入文字<code>tips</code>并且处于选中状态，直接输入就会被替换掉。</p>
+
+<p><code>description</code>则是说明信息。</p>
+
+<p>这样一来Snippet也弄好了，然后试着用我们刚刚写完的插件编写和运行bf代码吧！</p>
+
+<p><strong><a href="/post/vscode-ext1#目录">点此返回目录</a></strong></p>
+
+<hr/>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="https://code.visualstudio.com/api/references/vscode-api#CompletionItemProvider">CompletionItemProvider</a></li>
+<li><a href="https://stackoverflow.com/questions/30687783/create-custom-language-in-visual-studio-code">Create Custom Language in Visual Studio Code</a></li>
+<li><a href="https://github.com/microsoft/vscode-emmet/">vscode-emmet opensource project</a></li>
+<li><a href="https://code.visualstudio.com/api/language-extensions/snippet-guide">snippet-guide</a></li>
+</ul>
+</body></html>

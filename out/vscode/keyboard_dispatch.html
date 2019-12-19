@@ -1,0 +1,10 @@
+<html><head><title>VSCode在Ubuntu上交换Capslock和Esc</title></head><body><h2>起源</h2>
+
+<p>之前入了VIM的坑，真的特别香。</p>
+
+<p>用VIM的应该都交换了Capslock和Esc，这是系统级别的交换，看似和VSCode不发生关系，不过在Ubuntu下的VSCode上确实是不管用的，其他编辑器没出现这种情况。</p>
+
+<p>百度了一番，发现了这个issue：<a href="https://github.com/microsoft/vscode/issues/23991#issuecomment-292336504">vscode-issues-23991</a></p>
+
+<p>在设置里加入：<code>&#34;keyboard.dispatch&#34;: &#34;keyCode&#34;</code>即可。</p>
+</body></html>

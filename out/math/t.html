@@ -1,0 +1,94 @@
+<html><head><title>矩阵</title></head><body><p><em>注意：本篇中Latex生成的数学表达式可能有问题</em></p>
+
+<p>Numpy实际就是一个矩阵运算库，数据分析这些工作实际上也都是在操作矩阵。</p>
+
+<p>矩阵就是个多维数组，m行n列的矩阵称为m*n矩阵。
+$A=\left[
+    \begin{matrix}
+    	1&amp;2&amp;3\
+    	4&amp;5&amp;6\
+    	7&amp;8&amp;9
+    \end{matrix}
+\right]\
+\
+A_{2,3}=6$</p>
+
+<h3>矩阵加法</h3>
+
+<p>矩阵加法需要满足两个矩阵大小相同，比如。
+$
+A=\left[\begin{matrix}
+	1&amp;2&amp;3\
+	4&amp;5&amp;6\
+	7&amp;8&amp;9
+\end{matrix}
+\right]
+B=\left[    \begin{matrix}  <br/>
+	1&amp;2&amp;3\
+	4&amp;5&amp;6\
+	7&amp;8&amp;9
+\end{matrix}\right]
+A+B=\left[\begin{matrix}  <br/>
+	2&amp;4&amp;6\
+	8&amp;10&amp;12\
+	14&amp;16&amp;18    
+\end{matrix}\right]
+$</p>
+
+<h3>矩阵乘法</h3>
+
+<p>矩阵的乘法只有在A为<code>m*k</code>矩阵，B为<code>k*n</code>矩阵时才有定义，也就是说只有第一个矩阵列数等于第二个行数的时候才可以进行乘法运算。
+$
+AB<em>{ij}=\sum</em>{n=1}^kA<em>{in}B</em>{nj}
+$
+A的第i行和B的第j列的元素依次相乘并相加得到的就是AB的第i,j个元素，AB最后为m*n矩阵。</p>
+
+<p>如：
+$
+A=\left[    \begin{matrix}
+	2&amp;0&amp;5\
+	1&amp;5&amp;3
+\end{matrix}\right]
+B=\left[\begin{matrix}
+	2&amp;1\
+	4&amp;4\
+	1&amp;1
+\end{matrix}\right]
+A×B=\left[\begin{matrix}
+	9&amp;7\
+	25&amp;24
+\end{matrix}\right]
+$</p>
+
+<h3>单位矩阵</h3>
+
+<p>单位矩阵是一个<code>n*n</code>的，由0和1组成的矩阵，定义如下：
+$
+I<em>n=[δ</em>{ij}]，\delta<em>{ij}=1如果i=j，\delta</em>{ij}=0如果i \neq j\
+I_n=\left[\begin{matrix}
+	1&amp;0&amp;\cdots&amp;0\
+	0&amp;1&amp;\cdots&amp;0\
+	\vdots&amp;\vdots&amp;&amp;\vdots\
+	0&amp;0&amp;\cdots&amp;1
+\end{matrix}\right]
+$
+一个矩阵乘以合适的单位矩阵不会改变该矩阵。
+$
+当A为m×n矩阵时，有\
+AI_n=I_mA=A
+$</p>
+
+<h3>矩阵转置</h3>
+
+<p>$
+A=\left[\begin{matrix}  <br/>
+	2&amp;0&amp;5\
+	1&amp;5&amp;3
+\end{matrix}\right]
+A^T=\left[\begin{matrix}  <br/>
+	2&amp;1\
+	0&amp;5\
+	5&amp;3
+\end{matrix}\right]
+$</p>
+</body></html>

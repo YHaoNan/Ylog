@@ -1,0 +1,64 @@
+<html><head><title>Leetcode - Reverse Integer</title></head><body><h3>闲白</h3>
+
+<p>昨天那题给我干懵逼了。今天直接来个简单的。</p>
+
+<h3>描述</h3>
+
+<blockquote>
+<p>Given a 32-bit signed integer, reverse digits of an integer.</p>
+</blockquote>
+
+<p>难度：easy</p>
+
+<p>示例：</p>
+
+<pre><code>Input: 123
+Output: 321
+
+Input: -123
+Output: -321
+
+Input: 120
+Output: 21
+</code></pre>
+
+<p>注意：
+&gt;Note:<br/>
+&gt;Assume we are dealing with an environment which could only store integers within the 32-bit signed integer range: [−2^31,  2^31 − 1]. For the purpose of this problem, assume that your function returns 0 when the reversed integer overflows.</p>
+
+<h3>分析</h3>
+
+<p>没啥好分析的，倒过来还不简单，就是要注意正负和int类型最大值反过来可能越界的问题。</p>
+
+<p>有难度的地方就是负数和最大值，我把它们都当做正数处理就好了。</p>
+
+<h3>实现</h3>
+
+<pre><code class="language-java">class Solution {
+    public int reverse(int x) {
+        if (x==Integer.MAX_VALUE||x==Integer.MIN_VALUE)
+            return 0;
+        boolean isNegative = x&lt;0;
+
+        x = Math.abs(x);
+
+        int result=0;
+        while (x!=0){
+            if (result&gt;Integer.MAX_VALUE/10)
+                return 0;
+            result*=10;
+            result+=(x%10);
+            x/=10;
+        }
+        result*=isNegative?-1:1;
+        return result;
+    }
+}
+</code></pre>
+
+<p>结果：</p>
+
+<pre><code>Runtime: 1 ms, faster than 100.00% of Java online submissions for Reverse Integer.
+Memory Usage: 32.7 MB, less than 67.28% of Java online submissions for Reverse Integer.
+</code></pre>
+</body></html>

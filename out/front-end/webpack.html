@@ -1,0 +1,194 @@
+<html><head><title>Webpack入门（一） 基本概念</title></head><body><p>在前端逐渐模块化的今天，不会nodejs和webpack简直就像外星人一样…</p>
+
+<h2>webpack项目的创建</h2>
+
+<p>先创建一个文件夹，之后运行：</p>
+
+<pre><code class="language-bash">npm init
+</code></pre>
+
+<p>Webpack4版本中需要安装<code>webpack</code>和<code>webpack-cli</code>两个工具：</p>
+
+<pre><code class="language-bash">npm i -D webpack webpack-cli
+B
+</code></pre>
+
+<p>这样一来项目的依赖就全都下载好了，我们可以开始创建项目结构了。</p>
+
+<pre><code>.
+├── dist
+│   └── index.html
+├── package.json
+├── package-lock.json
+├── src
+│   └── index.js
+└── webpack.config.js
+</code></pre>
+
+<p>A
+这是一个webpack项目最基本的目录结构，<code>dist</code>中是生成的目标文件和SPA应用的主html文件，<code>src</code>是我们编写的代码，<code>webpack.config.js</code>是webpack的配置文件。</p>
+
+<p>我们首先编写<code>src</code>中的<code>index.js</code>：</p>
+
+<pre><code class="language-js">function createElement(text){
+    let div = document.createElement(&#39;div&#39;);
+    div.innerText = text;
+    return div;
+}
+
+document.body.append(createElement(&#39;Hello,World!&#39;))
+</code></pre>
+
+<p>代码很简单，就是往body中添加一个div。</p>
+
+<p>接下来是<code>dist</code>中的<code>index.html</code></p>
+
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt;
+    &lt;meta http-equiv=&#34;X-UA-Compatible&#34; content=&#34;ie=edge&#34;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;script src=&#34;./main.js&#34;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>这个html中引用一个<code>main.js</code>，可是并没有这个文件，这个就是webpack给我们生成的文件。我们需要在<code>webpack.config.js</code>中编写配置：</p>
+
+<pre><code class="language-js">var path = require(&#39;path&#39;);
+
+module.exports = {
+    entry: &#39;./src/index.js&#39;,
+    mode: &#39;development&#39;,
+    output: {
+        filename: &#39;main.js&#39;,
+        path: path.resolve(__dirname,&#39;dist&#39;)
+    }
+}
+</code></pre>
+
+<p>这个配置文件导出了一个对象，这个对象就是webpack项目的配置，<code>entry</code>指定了入口文件，我们的入口文件就是刚刚编写的<code>index.js</code>，mode是模式，我们指定开发模式，output则是输出配置，这里就看到了<code>main.js</code>的身影，我们把他导出到<code>dist/main.js</code>。</p>
+
+<p>在浏览器中打开这个<code>index.html</code>，我们编写的div显示了出来。</p>
+
+<h2>loader</h2>
+
+<p>在webpack中，万物都是模块，甚至图片和字体都是模块。一个web工程肯定会包括很多资源文件，比如CSS、JS、图片、模板、字体等等，webpack本身只能处理js，所以需要各式各样的loader来处理这些文件。</p>
+
+<p>其实loader的本质就是一个函数，你传入一个东西，它给你返回处理后的东西。比如使用<code>babel-loader</code>将es6的js语法转换为es5，可以理解为其工作原理是这样的：</p>
+
+<pre><code>ES5 = babel-loader(ES6)
+</code></pre>
+
+<p>loader也可以是链式的，例如我们在使用scss时需要将它编译成css，然后再加载到html的style标签中，就像如下：</p>
+
+<pre><code>Style Element = style-loader(css-loader(scss-loader(SCSS)))
+</code></pre>
+
+<p>下面开始在webpack中使用loader工作，我们在src中创建一个css文件，并且引入它：</p>
+
+<p><code>style.css</code></p>
+
+<pre><code class="language-css">body{
+    color: #f00;
+    font-size: 1.5em;
+}
+</code></pre>
+
+<p><code>index.js</code></p>
+
+<pre><code class="language-js">import &#39;./style.css&#39;
+//...
+</code></pre>
+
+<p>运行示例，发现报错了：</p>
+
+<pre><code>ERROR in ./src/style.css 1:4
+Module parse failed: Unexpected token (1:4)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+&gt; body{
+|     color: #f00;
+|     font-size: 1.5em;
+ @ ./src/index.js 1:0-20
+</code></pre>
+
+<p>从异常信息看，是因为没有一个loader来处理css类型的文件，所以我们需要安装并配置loader。</p>
+
+<p>安装<code>css-loader</code>和<code>style-loader</code>，他们分别用来解析css文件和把css插入到html的style标签中。</p>
+
+<pre><code>npm i -D css-loader style-loader
+</code></pre>
+
+<p>安装完后，修改<code>webpack.config.js</code>去针对css文件设置使用这两个loader。</p>
+
+<pre><code class="language-js">var path = require(&#39;path&#39;);
+
+module.exports = {
+    entry: &#39;./src/index.js&#39;,
+    mode: &#39;development&#39;,
+    output: {
+        filename: &#39;main.js&#39;,
+        path: path.resolve(__dirname,&#39;dist&#39;)
+    },
+    module: {
+        rules: [{
+            test: /\.css$/,
+            use: [&#39;style-loader&#39;,&#39;css-loader&#39;]
+        }]
+    }
+}
+</code></pre>
+
+<p>在<code>module</code>中设置一个rules，里面是针对引入的资源文件的扩展类型而使用的loader，上面我们指定了一个css类型的文件，并且使用了这两个loader，使用数组方式声明loader会从后向前链式调用。</p>
+
+<h2>loader-options</h2>
+
+<p>有的loader提供了预置项，可以通过<code>options</code>设置：</p>
+
+<pre><code class="language-js">module: {
+    rules: [{
+        test: /\.css$/,
+        use: [&#39;style-loader&#39;,{
+            loader:&#39;css-loader&#39;,
+            options: {
+                //配置项
+            }
+        }]
+    }]
+}
+</code></pre>
+
+<h2>更多配置</h2>
+
+<h3>exclude和include</h3>
+
+<p>很多时候loader需要排除一些目录或者仅包含一些目录，这时可以用这两个选项。</p>
+
+<pre><code class="language-js">module: {
+    rules: [{
+        test: /\.css$/,
+        use: [&#39;style-loader&#39;,{
+            loader:&#39;css-loader&#39;,
+            options: {
+                //配置项
+            }
+        }],
+        exclude: /node_modules/
+    }]
+}
+</code></pre>
+
+<h3>enforce</h3>
+
+<p>用来指定一个loader的触发时机，<code>pre</code>代表比所有loader先触发，post表示在所有模块之后触发。</p>
+
+<h2>参考资料</h2>
+
+<ul>
+<li>Webpack实战：入门、进阶与调优</li>
+</ul>
+</body></html>

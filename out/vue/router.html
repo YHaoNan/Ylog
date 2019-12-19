@@ -1,0 +1,237 @@
+<html><head><title>Vue前端路由</title></head><body><p>Vue擅长SPA应用，就是单页面应用，而且近几年SPA应用越来越流行，很多站点的html打开后都只有一个空壳，并且这个空壳会被动态填充，贯穿全局。</p>
+
+<p>只用一个页面贯穿整个网站产生了一个问题，那就是路由问题，这部分问题以前都是在服务端处理的，根据不同的URL返回不同的页面，实际上，这还没做到前后端分离，因为后端还是要处理路由。SPA应用把路由功能转移到了前端JS上，通过监听url变化填充不同的页面内容，这样开发前端应用就很像开发固定平台的APP，页面相关的功能由JS实现，后端只提供一套API即可。</p>
+
+<h2>目录结构</h2>
+
+<p>先把本篇笔记的目录放出来：</p>
+
+<pre><code>.
+├── index.html
+├── package.json
+├── package-lock.json
+├── src
+│   ├── about.vue
+│   ├── App.vue
+│   ├── index.js
+│   └── index.vue
+└── webpack.config.js
+</code></pre>
+
+<p>如果需要跟本篇的思路一起练习编写代码，请按上面的目录结构创建文件。</p>
+
+<h2>vue-router</h2>
+
+<p>Vue提供了<code>vue-router</code>插件来实现前端路由功能。</p>
+
+<pre><code class="language-bash">npm i -P vue-router
+</code></pre>
+
+<p>然后我们可以通过<code>Vue.use</code>方法来使用它:</p>
+
+<p><code>index.js</code>：</p>
+
+<pre><code>import Vue from &#39;vue&#39;;
+import VueRouter from &#39;vue-router&#39;
+
+Vue.use(VueRouter);
+</code></pre>
+
+<p>我们先编写<code>index.html</code>：</p>
+
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;title&gt;&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&#34;app&#34;&gt;&lt;/div&gt;
+    &lt;script src=&#34;/dist/main.js&#34;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>这肯定没什么好说的，然后就是App.vue：</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;div&gt;
+        APP
+        &lt;router-view&gt;&lt;/router-view&gt;
+    &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+    export default {
+    }
+&lt;/script&gt;
+
+&lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+
+<p>这里面唯一一个新面孔就是<code>router-view</code>，这是vue提供的一个组件，它最终会被渲染成其他的路由页面。</p>
+
+<p>我们为这个示例编写两个路由页面，分别是<code>index.vue</code>和<code>about.vue</code>，并且在访问其他不存在的页面时统统跳转到<code>index</code>，这些逻辑我们需要在<code>index.js</code>中编写：</p>
+
+<pre><code class="language-js">import Vue from &#39;vue&#39;
+import App from &#39;./App.vue&#39;
+import VueRouter from &#39;vue-router&#39;
+
+Vue.use(VueRouter)
+
+var router = new VueRouter({
+    mode: &#39;history&#39;,
+    routes: [
+        {
+            path: &#39;/index&#39;,
+            components: require(&#39;./index.vue&#39;)
+        },
+        {
+            path: &#39;/about&#39;,
+            components: require(&#39;./about.vue&#39;)
+        },
+        {
+            path: &#39;*&#39;,
+            redirect: &#39;/index&#39;
+        }
+    ]
+})
+
+new Vue({
+    el: &#39;#app&#39;,
+    router: router,
+    render: h =&gt; h(App)
+});
+</code></pre>
+
+<p>这里面用<code>VueRouter</code>来初始化了一个路由，并且传入了创建的Vue根实例中。注册路由时，用<code>path</code>制定一个表达式，如果满足的就会渲染定义的组件。我们来看看<code>index.vue</code>和<code>about.vue</code>：</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;div&gt;
+        This is the index page.
+    &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+
+}
+&lt;/script&gt;
+</code></pre>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;div&gt;
+        This is the about page.
+    &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+
+}
+&lt;/script&gt;
+</code></pre>
+
+<p>这样在浏览器中运行时输入<code>index</code>和<code>about</code>就会看到相应的页面了。</p>
+
+<h2>带参路由</h2>
+
+<p>路由的path可以携带一个参数，比如<code>/user/123456</code>，其中的<code>123456</code>为用户id，这在业务中非常常见。</p>
+
+<pre><code class="language-js">{
+    path: &#39;/user/:id&#39;,
+    components: require(&#39;./user.vue&#39;)
+}
+</code></pre>
+
+<p>这样就注册了一个带参数的路由，我们在组件中可以通过<code>$route.params</code>来获取它：</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;div&gt;
+        {{ $route.params.id }}
+    &lt;/div&gt;
+&lt;/template&gt;
+&lt;script&gt;
+export default {
+
+}
+&lt;/script&gt;
+</code></pre>
+
+<h2>跳转</h2>
+
+<p>vue-router提供了<code>router-link</code>用于跳转页面。</p>
+
+<pre><code class="language-html">&lt;div&gt;
+    APP
+    &lt;router-view&gt;&lt;/router-view&gt;
+    &lt;router-link to=&#34;/index&#34;&gt;首页&lt;/router-link&gt;
+    &lt;router-link to=&#34;/about&#34;&gt;关于&lt;/router-link&gt;
+    &lt;router-link :to=&#34;&#39;/user/&#39;+id&#34;&gt;我&lt;/router-link&gt;
+    &lt;br&gt;
+    你的id
+    &lt;br&gt;
+    &lt;input type=&#34;number&#34; v-model=&#34;id&#34;&gt;
+&lt;/div&gt;
+</code></pre>
+
+<p>修改<code>App.vue</code>，让它支持跳转到其他的页面。</p>
+
+<p>默认情况下<code>router-link</code>会被渲染成a标签，你也可以通过指定<code>tag</code>prop来决定渲染成什么标签：</p>
+
+<pre><code class="language-html">&lt;router-link to=&#39;/about&#39; tag=&#39;li&#39;&gt;About&lt;/router-link&gt;
+</code></pre>
+
+<p>如果使用<code>replace</code>，则不会留下历史记录，不能使用回退：</p>
+
+<pre><code class="language-html">&lt;router-link to=&#39;/about&#39; replace&gt;About&lt;/router-link&gt;
+</code></pre>
+
+<p>默认情况下如果<code>router-link</code>对应路由匹配成功，会自动添加一个<code>router-link-active</code>的类，可以通过给它设置<code>active-class</code>prop修改这个默认值。</p>
+
+<p>除了使用Vue的<code>router-link</code>组件，还可以使用<code>this.$router.push(&#39;/user/123&#39;)</code>跳转页面。</p>
+
+<ul>
+<li><code>this.$router.replace(&#39;/index&#39;)</code>  不会留下历史记录</li>
+<li><code>this.$router.go(-1)</code> 前进n页 示例为后退一页</li>
+</ul>
+
+<h2>修改网页标题</h2>
+
+<p>Vue提供了两个钩子，<code>beforeEach</code>和<code>afterEach</code>分别是路由改变之前和路由改变之后触发。修改标题我们需要用到<code>beforeEach</code>。</p>
+
+<pre><code class="language-js">var router = new VueRouter({
+    mode: &#39;history&#39;,
+    routes: [
+        {
+            path: &#39;/index&#39;,
+            components: require(&#39;./index.vue&#39;),
+            meta: {
+                title: &#39;Index&#39;
+            }
+        },
+        /...
+    ]
+});
+
+router.beforeEach((to,from,next) =&gt; {
+    console.log(to.meta.title)
+    window.document.title = to.meta.title;
+    next();
+})
+</code></pre>
+
+<p>必须要调用<code>next()</code>进入下一个钩子。</p>
+
+<p>可以用这个<code>beforeEach</code>判断是否登录：</p>
+
+<pre><code class="language-js">router.beforeEach((to,from,next)=&gt;{
+    if(window.localStorage.getItem(&#39;token&#39;))
+        next()
+    else
+        next(&#39;/login&#39;)
+})
+</code></pre>
+
+<p><code>next</code>的参数为false可以取消导航</p>
+</body></html>

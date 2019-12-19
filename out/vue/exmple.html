@@ -1,0 +1,339 @@
+<html><head><title>初识Vue —— 制作 I&#39;ll tell you</title></head><body><p>
+<style>
+    #exm{
+        text-align: left;
+    }
+    #exm iframe{
+        border: 2px #333 solid;
+        outline: none;
+        width:100%;
+    }
+    #exm button{
+        outline: none;
+        border: 2px #333 solid;
+        margin-top:10px;
+        background-color: #ddd;
+        padding: 10px;
+        
+    }
+</style>
+
+这几天一直在看《Java并发编程实战》，那书看得很累，今天想换换口味，之前一直想学vue也没行动，今天学学。就跟着官方教程学了起来，并做了下官方的Demo。
+
+先看下示例效果：<a href="http://host.lilpig.site/ity">I’ll tell you</a>
+
+因为没对手机适配，但是也能用，电脑效果更佳。
+
+
+
+</p>
+
+<h2>准备
+</h2>
+
+<p>先说一下vue的一些基本语法。
+
+首先看看一个基本的Vue示例：
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;title&gt;E01&lt;/title&gt;
+    &lt;!--  使用cdn引入vue  --&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&#34;app&#34;&gt;
+        {{message}}
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        var app = new Vue({
+            el: &#39;#app&#39;,
+            data: {
+                &#39;message&#39;: &#39;Hello,World!&#39;
+            }
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+效果：
+</p><div id="exm">
+    <iframe id="exm" src="http://host.lilpig.site/vue-exm/e01.html"></iframe>
+    <a href="http://host.lilpig.site/vue-exm/e01.html"><button>在浏览器中运行</button></a>
+</div>
+
+
+首先要初始化vue的构造函数，并传入一些数据，然后vue会操作DOM，把这些数据渲染进去，而且这些数据是实时的，点击在浏览器中运行，打开开发者工具的<code>console</code>，输入<code>app.message=&#34;ABC&#34;</code>，那么你会发现对应的文字也会变成ABC，因为Vue是响应式的，所以你做的所有修改都能实时传递到DOM中。
+
+Vue不仅能通过双大括号把数据渲染进标签文本，对于标签属性，vue也提供了支持。我们看一个更复杂的示例：
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&#34;helo&#34;&gt;
+        {{ message }}
+        &lt;input type=&#34;text&#34; v-model=&#34;message&#34;&gt;
+    &lt;/div&gt;
+    &lt;script&gt;
+            var app = new Vue({
+                el: &#34;#helo&#34;,
+                data:{
+                    message: &#34;&#34;,
+                },
+            });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+这个示例和刚刚的只差了多了一个input标签，<code>v-model</code>可以把表单元素和vue中的一个值绑定，当表单元素改变这个值也会跟着改变，当这个值改变，表单元素也会改。
+
+于是上面的示例我们会发现，在输入框中输入啥就会出现啥文字，试一下。
+
+效果：
+<div id="exm">
+    <iframe id="exm" src="http://host.lilpig.site/vue-exm/e02.html"></iframe>
+    <a href="http://host.lilpig.site/vue-exm/e02.html"><button>在浏览器中运行</button></a>
+</div>
+
+<code>v-on</code>则会把元素的一个监听器和一个声明在<code>methods</code>中的方法绑定，比如：
+
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&#34;helo&#34;&gt;
+    &lt;select v-model=&#34;selected&#34;&gt;
+        &lt;option&gt;百度&lt;/option&gt;
+        &lt;option&gt;必应&lt;/option&gt;
+    &lt;/select&gt;
+    &lt;input type=&#34;text&#34; v-model=&#34;searchKW&#34;&gt;
+    &lt;button v-on:click=&#34;search&#34;&gt;搜索一下&lt;/button&gt;
+
+&lt;/div&gt;
+&lt;script&gt;
+    var app = new Vue({
+        el: &#34;#helo&#34;,
+        data:{
+            urls: {
+                &#39;百度&#39;:&#39;https://www.baidu.com/s?wd=&#39;,
+                &#39;必应&#39;:&#39;https://cn.bing.com/search?q=&#39;
+            }
+        },
+        methods:{
+            search:function () {
+                window.location = this.urls[this.selected]+this.searchKW;
+            }
+        }
+    });
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+<div id="exm">
+    <iframe id="exm" src="http://host.lilpig.site/vue-exm/e03.html"></iframe>
+    <a href="http://host.lilpig.site/vue-exm/e03.html"><button>在浏览器中运行</button></a>
+</div>
+
+<code>v-if</code>可以决定一个元素是否显示：
+
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&#34;helo&#34;&gt;
+    &lt;input type=&#34;checkbox&#34; v-model=&#34;visiable&#34;&gt;{{visiable ? &#39;展示&#39; : &#39;隐藏&#39;}}
+    &lt;div v-if=&#34;visiable&#34;&gt;我是div&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    var app = new Vue({
+        el: &#34;#helo&#34;,
+        data:{
+            visiable: true
+        },
+    });
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+<div id="exm">
+    <iframe id="exm" src="http://host.lilpig.site/vue-exm/e04.html"></iframe>
+    <a href="http://host.lilpig.site/vue-exm/e04.html"><button>在浏览器中运行</button></a>
+</div>
+
+<code>watch</code>可以监听一个变量的改变：
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&#34;helo&#34;&gt;
+    {{ message }}
+    &lt;input type=&#34;text&#34; v-model=&#34;message&#34;&gt;
+    &lt;span&gt;{{ log }}&lt;/span&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    var app = new Vue({
+        el: &#34;#helo&#34;,
+        data:{
+            message: &#34;Hello,World!&#34;,
+            log: &#39;&#39;,
+            to:null
+        },
+        watch: {
+            message: function(oldV,newV){
+                var vm = this;
+                if (vm.to==null){
+                    vm.to = setTimeout(function(){
+                        vm.log = &#39;&#39;;
+                    },500)
+                } else {
+                    clearTimeout(vm.to);
+                    vm.to = null;
+                }
+                vm.log = &#39;Change message to &#39;+newV
+            }
+        }
+    });
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+<div id="exm">
+    <iframe id="exm" src="http://host.lilpig.site/vue-exm/e05.html"></iframe>
+    <a href="http://host.lilpig.site/vue-exm/e05.html"><button>在浏览器中运行</button></a>
+</div>
+
+<p></p>
+
+<h2>I’ll tell you
+</h2>
+
+<p>准备工作做完了，我们来开始搞这个I’ll tell you
+
+当然，我们只学了Vue的冰山一角，不过搞这个够了。
+
+依赖：
+    - vue
+    - axios@0.12.0  
+        异步请求库，用于请求yesorno api
+    - lodash@4.13.1  
+        用于实现等待输入功能
+
+html结构如下：
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;title&gt;Yes Or No&lt;/title&gt;
+    &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes&#34; /&gt;
+    &lt;link rel=&#34;stylesheet&#34; href=&#34;./res/style.css&#34;&gt;
+    &lt;!-- 引入VUE --&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+    &lt;!-- 引入axios --&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/axios@0.12.0/dist/axios.min.js&#34;&gt;&lt;/script&gt;
+    &lt;!-- 引入lodash --&gt;
+    &lt;script src=&#34;https://cdn.jsdelivr.net/npm/lodash@4.13.1/lodash.min.js&#34;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&#34;app&#34;&gt;
+        &lt;img v-bind:src=&#34;imgUrl&#34;/&gt;
+        &lt;transition name=&#34;fade&#34;&gt;
+            &lt;div id=&#34;loading-dialog&#34; v-if=&#34;loading&#34;&gt;I&#39;m thinking...&lt;/div&gt;
+        &lt;/transition&gt;
+        &lt;div id=&#34;center&#34;&gt;
+            &lt;p&gt;&lt;span class=&#34;title&#34;&gt;I&#39;ll tell U yes or no  &lt;span class=&#34;bigger&#34;&gt;:)&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;
+            &lt;input v-model=&#34;question&#34;/&gt;
+            &lt;p&gt;&lt;span id=&#34;answer&#34;&gt;{{answer}}&lt;/span&gt;&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div id=&#34;link&#34;&gt;LINK &amp;nbsp;: &amp;nbsp;&lt;a href=&#34;http://lilpig.site&#34; target=&#34;_blank&#34;&gt;LILPIG的博客&lt;/a&gt; &amp;nbsp;|&amp;nbsp; &lt;a href=&#34;http://host.lilpig.site/gameoflife&#34; target=&#34;_blank&#34;&gt;生命游戏试玩&lt;/a&gt;&lt;/div&gt;
+    &lt;!-- 构造VUE对象 --&gt;
+    &lt;script src=&#34;./res/vue-binding-elements.js&#34;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+css我就不放上来了，占地方。接下来就是<code>vue-binding-elements.js</code>
+
+<code>js
+var vm = new Vue({
+    el: &#39;#app&#39;,
+    data:{
+        question: &#39;&#39;,
+        answer: &#39;Ask me a question!&#39;,
+        imgUrl:&#39;&#39;,
+        loading: false
+    },
+    watch:{
+        question:function (oldV,newV) {
+            this.answer = &#34;Waiting for your typing...&#34;;
+            this.doDebounce();
+        }
+    },
+    created: function () {
+        this.doDebounce = _.debounce(this.getAnswer, 500);
+        this.getAnswer(true);
+    },
+    methods:{
+        getAnswer: function(isInit){
+            if (this.question.endsWith(&#34;?&#34;) || this.question.endsWith(&#34;？&#34;) || isInit){
+                var vm = this;
+                vm.loading = true;
+                axios.get(&#39;https://yesno.wtf/api&#39;)
+                    .then(function (response) {
+                        if (!isInit)
+                            vm.answer = _.capitalize(response.data.answer);
+                        var respImgUrl = response.data.image;
+                        if (respImgUrl != vm.imgUrl)
+                            vm.imgUrl = response.data.image;
+                    })
+                    .catch(function (err) {
+                        vm.answer = &#39;I\&#39; so sorry.I don\&#39;t know.T_T&#39;
+                    }).finally(function () {
+                        vm.loading = false;
+                    })
+            }else {
+                this.answer = &#39;A question must end with a ?&#39;
+            }
+        }
+    }
+});
+</code>
+
+嘶，，代码挺简单的，结合官方文档看吧。</p>
+</body></html>

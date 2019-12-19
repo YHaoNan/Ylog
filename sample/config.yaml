@@ -1,0 +1,17 @@
+label: LILPIG的博客
+theme: default
+assets: ${POSTDIR}/assets/
+#cdn: https://xxxxxxxxxx/
+
+plugins:
+  copyright:
+    template: Powerd by Ylog
+    author: LILPIG
+  contacts:
+    email: 1355265122@qq.com
+    sina: lilpig
+    twitter: lilpig
+
+cmdPlugins:
+  gitpush:
+    remote: https://xxxxxxxx.git

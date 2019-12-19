@@ -1,0 +1,463 @@
+<html><head><title>Vue中的组件</title></head><body><p>
+<style>
+    #exm{
+        text-align: left;
+    }
+    #exm iframe{
+        border: 2px #333 solid;
+        outline: none;
+        width:100%;
+    }
+    #exm button{
+        outline: none;
+        border: 2px #333 solid;
+        margin-top:10px;
+        background-color: #ddd;
+        padding: 10px;
+        
+    }
+</style>
+
+</p>
+
+<h2>示例
+</h2>
+
+<p><code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;button-counter&gt;&lt;/button-counter&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    Vue.component(&#39;button-counter&#39;,{
+        data:function () {
+            return {
+                count: 0
+            }
+        },
+        template: &#39;&lt;button @click=&#34;count++&#34;&gt;You have clicked me {{count}} times.&lt;/button&gt;&#39;
+    });
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            contentFontSize: 1,
+        }
+    });
+&lt;/script&gt;
+</code>
+
+</p><div id="exm">
+    <iframe id="exm" src="http://host.lilpig.site/vue-exm/e11.html"></iframe>
+    <a href="http://host.lilpig.site/vue-exm/e11.html"><button>在浏览器中运行</button></a>
+</div>
+
+使用<code>Vue.component</code>注册一个全局的组件，组件名是第一个参数，第二个参数是这个组件的模板、数据等信息，然后就可以在html中使用这个组件了。
+
+<p></p>
+
+<h2>局部组件
+</h2>
+
+<p><code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;button-counter&gt;&lt;/button-counter&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    var ButtonCounter = {
+        data:function () {
+            return {
+                count: 0
+            }
+        },
+        template: &#39;&lt;button @click=&#34;count++&#34;&gt;You have clicked me {{count}} times.&lt;/button&gt;&#39;
+    };
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            contentFontSize: 1,
+        },
+        components:{
+            &#39;button-counter&#39;: ButtonCounter
+        }
+    });
+&lt;/script&gt;
+</code>
+使用<code>components</code>可以指定依赖的组件，当你使用一些构建系统时可以使用<code>import</code>导入写好的组件并引用它。
+
+</p>
+
+<h2>Props
+</h2>
+
+<p><code>props</code>是组件和数据之间的接口，我们可以通过定义<code>props</code>来向组件中传递数据。
+
+<code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;user-profile :username=&#34;user.username&#34; :age=&#34;user.age&#34; :gender=&#34;user.gender&#34;&gt;&lt;/user-profile&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+
+    Vue.component(&#39;user-profile&#39;,{
+        props: [&#39;username&#39;,&#39;age&#39;,&#39;gender&#39;],
+        template: &#39;&lt;div&gt;{{username}} -- {{age}} -- {{gender}}&lt;/div&gt;&#39;
+    });
+
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            user: {
+                username: &#39;LILPIG&#39;,
+                age: 16,
+                gender: &#39;male&#39;
+            }
+        }
+    })
+&lt;/script&gt;
+</code>
+
+这样有些啰嗦，不过Vue的<code>props</code>支持直接传入对象。
+
+<code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;user-profile :user=&#34;user&#34;&gt;&lt;/user-profile&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+
+    Vue.component(&#39;user-profile&#39;,{
+        props: [&#39;user&#39;],
+        template: &#39;&lt;div&gt;{{user.username}} -- {{user.age}} -- {{user.gender}}&lt;/div&gt;&#39;
+    });
+
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            user: {
+                username: &#39;LILPIG&#39;,
+                age: 16,
+                gender: &#39;male&#39;
+            }
+        }
+    })
+&lt;/script&gt;
+</code>
+
+</p>
+
+<h3>传入对象的所有属性
+</h3>
+
+<p><code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;user-profile v-bind=&#34;user&#34;&gt;&lt;/user-profile&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+
+    Vue.component(&#39;user-profile&#39;,{
+        props: [&#39;username&#39;,&#39;age&#39;,&#39;gender&#39;],
+        template: &#39;&lt;div&gt;{{username}} -- {{age}} -- {{gender}}&lt;/div&gt;&#39;
+    });
+
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            user: {
+                username: &#39;LILPIG&#39;,
+                age: 16,
+                gender: &#39;male&#39;
+            }
+        }
+    })
+&lt;/script&gt;
+</code>
+
+</p>
+
+<h2>Props验证
+</h2>
+
+<p>可以验证Props的类型。
+
+<code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;user-profile v-bind=&#34;user&#34;&gt;
+
+    &lt;/user-profile&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    Vue.component(&#39;user-profile&#39;,{
+        props: {
+            username: String,
+            age: Number,
+            gender: String
+        },
+        template: &#39;&lt;div&gt;{{username}} -- {{age}} -- {{gender}}&lt;/div&gt;&#39;
+    })
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            user: {
+                username: &#39;LILPIG&#39;,
+                age: &#39;16&#39;,
+                gender: &#39;male&#39;
+            }
+        }
+    })
+&lt;/script&gt;
+</code>
+<code>props</code>中的age需要一个<code>Number</code>类型，但是传入的是一个字符串，打开控制台会看到这样的错误信息：
+<code>text/plain
+[Vue warn]: Invalid prop: type check failed for prop &#34;age&#34;. Expected Number with value 16, got String with value &#34;16&#34;.
+</code>
+
+除此之外，你还可以这样定义<code>props</code>的验证规则：
+
+<code>javascript
+Vue.component(&#39;my-component&#39;, {
+  props: {
+    // 基础的类型检查 (`null` 和 `undefined` 会通过任何类型验证)
+    propA: Number,
+    // 多个可能的类型
+    propB: [String, Number],
+    // 必填的字符串
+    propC: {
+      type: String,
+      required: true
+    },
+    // 带有默认值的数字
+    propD: {
+      type: Number,
+      default: 100
+    },
+    // 带有默认值的对象
+    propE: {
+      type: Object,
+      // 对象或数组默认值必须从一个工厂函数获取
+      default: function () {
+        return { message: &#39;hello&#39; }
+      }
+    },
+    // 自定义验证函数
+    propF: {
+      validator: function (value) {
+        // 这个值必须匹配下列字符串中的一个
+        return [&#39;success&#39;, &#39;warning&#39;, &#39;danger&#39;].indexOf(value) !== -1
+      }
+    }
+  }
+})
+</code>
+
+</p>
+
+<h2>自定义事件
+</h2>
+
+<p><code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;custom-component @custom-event=&#34;onCustomEvent&#34;&gt;Custom Component&lt;/custom-component&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+    Vue.component(&#39;custom-component&#39;,{
+        template: &#34;&lt;div&gt;&lt;slot&gt;&lt;/slot&gt;&lt;button @click=\&#34;sendEvent\&#34;&gt;\n&#34; +
+            &#34;            Send Event\n&#34; +
+            &#34;        &lt;/button&gt;&lt;/div&gt;&#34;,
+        methods: {
+            sendEvent: function(){
+                this.$emit(&#34;custom-event&#34;);
+            }
+        }
+    })
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        methods: {
+            onCustomEvent: function(){
+                alert(&#34;On Custom Event&#34;);
+            }
+        }
+    })
+&lt;/script&gt;
+</code>
+
+可以像如上一样自定义一个事件，利用<code>$emit</code>函数和<code>v-on</code>。
+
+</p>
+
+<h2>插槽
+</h2>
+
+<p>在上面的示例中，<code>custom-component</code>的模板中有一对<code>slot</code>标签，里面没有任何内容。如果你删掉这个标签，那么你会发现我们引用这个组件时在其中写的文字<code>Custom Component</code>没了。
+
+Vue在渲染组件时会把组件中的内容放到插槽中，如果组件模板没有定义插槽那么将会舍弃内容。
+
+插槽中可以提供一个默认的备用值，在组件引用时没有填写内容时显示。
+
+</p>
+
+<h3>具名插槽
+</h3>
+
+<p><code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;page&gt;
+        &lt;template v-slot:header&gt;
+            &lt;h3&gt;Header&lt;/h3&gt;
+        &lt;/template&gt;
+
+        &lt;p&gt;
+            Hello,World
+        &lt;/p&gt;
+
+        &lt;template v-slot:footer&gt;
+            &lt;strong&gt;Footer&lt;/strong&gt;
+        &lt;/template&gt;
+    &lt;/page&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    Vue.component(&#39;page&#39;,{
+        template: &#39;&lt;div class=&#34;container&#34;&gt;\n&#39; +
+            &#39;    &lt;header&gt;\n&#39; +
+            &#39;        &lt;slot name=&#34;header&#34;&gt;&lt;/slot&gt;\n&#39; +
+            &#39;    &lt;/header&gt;\n&#39; +
+            &#39;    &lt;main&gt;\n&#39; +
+            &#39;        &lt;slot&gt;&lt;/slot&gt;\n&#39; +
+            &#39;    &lt;/main&gt;\n&#39; +
+            &#39;    &lt;footer&gt;\n&#39; +
+            &#39;        &lt;slot name=&#34;footer&#34;&gt;&lt;/slot&gt;\n&#39; +
+            &#39;    &lt;/footer&gt;\n&#39; +
+            &#39;&lt;/div&gt;&#39;,
+    })
+    var vm = new Vue({
+        el: &#39;#app&#39;
+    })
+&lt;/script&gt;
+</code>
+可以给插槽取个名字，然后使用<code>template</code>标签来包裹插入的内容。默认的名字是<code>default</code>。
+
+插槽访问数据是很必要的一件事。
+
+<code>html
+&lt;div id=&#34;app&#34;&gt;
+    &lt;custom-component :user=&#34;user&#34;&gt;
+        &lt;template v-slot:default=&#34;slotProps&#34;&gt;
+            {{slotProps.user.name}} -- {{slotProps.user.age}}
+        &lt;/template&gt;
+    &lt;/custom-component&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    Vue.component(&#39;custom-component&#39;,{
+        props:[&#39;user&#39;],
+        template: &#34;&lt;div&gt;&lt;slot :user=&#39;user&#39;&gt;{{user.name}}&lt;/slot&gt;&lt;/div&gt;&#34;
+    })
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            user: {
+                name: &#34;LILPIG&#34;,
+                age: 16,
+                gender: &#34;male&#34;
+            }
+        }
+    })
+&lt;/script&gt;
+</code>
+
+</p>
+
+<h2>is
+</h2>
+
+<p>
+is属性可以指定当前的模板使用哪个组件，这个可以用来制作标签页功能。
+
+<code>html
+&lt;div id=&#34;app&#34; class=&#34;demo&#34;&gt;
+    &lt;button
+            v-for=&#34;tab in tabs&#34;
+            v-bind:key=&#34;tab&#34;
+            v-bind:class=&#34;[&#39;tab-button&#39;, { active: currentTab === tab }]&#34;
+            v-on:click=&#34;currentTab = tab&#34;
+    &gt;{{ tab }}&lt;/button&gt;
+
+    &lt;component
+            v-bind:is=&#34;currentTabComponent&#34;
+            class=&#34;tab&#34;
+    &gt;&lt;/component&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+
+    Vue.component(&#39;tab-home&#39;,{
+        template: &#34;&lt;div&gt;Home Page&lt;/div&gt;&#34;
+    })
+
+    Vue.component(&#39;tab-post&#39;,{
+        template: &#34;&lt;div&gt;Post Page&lt;/div&gt;&#34;
+    })
+
+    var vm = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            currentTab: &#39;Home&#39;,
+            tabs: [&#39;Home&#39;,&#39;Post&#39;]
+        },
+        computed:{
+            currentTabComponent: function () {
+                return &#39;tab-&#39; + this.currentTab.toLowerCase();
+            }
+        }
+    })
+&lt;/script&gt;
+</code>
+
+</p><div id="exm">
+    <iframe id="exm" src="http://host.lilpig.site/vue-exm/e16.html"></iframe>
+    <a href="http://host.lilpig.site/vue-exm/e16.html"><button>在浏览器中运行</button></a>
+</div>
+
+每次vue都是重新渲染这个组件，这会导致丢失换页前用户的操作，比如选中checkbox，所以分页功能需要保存页面状态。可以通过添加<code>keep-alive</code>标签实现缓存功能。
+
+<code>html
+&lt;keep-alive&gt;
+    &lt;component
+            v-bind:is=&#34;currentTabComponent&#34;
+            class=&#34;tab&#34;
+    &gt;&lt;/component&gt;
+&lt;/keep-alive&gt;
+</code>
+<p></p>
+
+<h2>组件中的v-model
+</h2>
+
+<p>我们自己编写的组件也可以使用<code>v-model</code>，<code>v-model</code>中的变量会动态传入给组件<code>props</code>中的<code>value</code>，这是固定的。这是组件的父节点到组件的单向绑定，而从组件到父节点的绑定需要在组件中用<code>$emit</code>发射<code>input</code>事件。
+
+如下代码可以将<code>message</code>和<code>my-input</code>组件进行双向绑定，无论哪边的数据更改了都会响应。
+“`html
+</p><div id="app">
+	<p>{{message}}</p>
+	<my-input v-model="message"></my-input>
+</div><p></p>
+
+<p><script>
+	Vue.component(&lsquo;my-input&rsquo;,{
+		props: [&lsquo;value&rsquo;],
+		template: &lsquo;<div><input :value="value" @input="emitEvent"/>\
+				</div>&rsquo;,
+		methods: {
+			emitEvent: function(event){
+				this.$emit(&lsquo;input&rsquo;,event.target.value);
+			}
+		}
+	})
+	var vm = new Vue({
+		el: &lsquo;#app&rsquo;,
+		data: {
+			message: &lsquo;Hello,World!&rsquo;
+		}
+	})
+</script>
+“`</p>
+</body></html>

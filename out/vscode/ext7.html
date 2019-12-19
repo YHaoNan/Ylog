@@ -1,0 +1,350 @@
+<html><head><title>VSCode 扩展开发(七) 实战-翻译插件</title></head><body><h2>学习目标</h2>
+
+<p>本章和接下来一章都是实战相关的插件。</p>
+
+<p>本章主要制作一个翻译插件，提供悬停翻译和划词翻译，整篇翻译和注释翻译，并且会学到一些TextEditor的API。</p>
+
+<h2>注册API服务</h2>
+
+<p>首先我们使用百度翻译API进行翻译工作，所以请前往<a href="http://api.fanyi.baidu.com/api/trans/product/index">百度翻译开放平台</a>去注册开发者账号。</p>
+
+<p>注册后到管理控制台-&gt;开发者信息中去查看APP Id和秘钥。</p>
+
+<p>通用翻译API HTTP地址：</p>
+
+<p><a href="http://api.fanyi.baidu.com/api/trans/vip/translate">http://api.fanyi.baidu.com/api/trans/vip/translate</a></p>
+
+<p>通用翻译API HTTPS地址：</p>
+
+<p><a href="https://fanyi-api.baidu.com/api/trans/vip/translate">https://fanyi-api.baidu.com/api/trans/vip/translate</a></p>
+
+<p>API参数：</p>
+
+<table class="info-table">
+<tbody><tr>
+<th>字段名</th>
+<th>类型</th>
+<th>必填参数</th>
+<th>描述</th>
+<th class="last-co">备注</th>
+</tr>
+<tr>
+<td>q</td>
+<td>TEXT</td>
+<td>Y</td>
+<td>请求翻译query</td>
+<td>UTF-8编码</td>
+</tr>
+<tr>
+<td>from</td>
+<td>TEXT</td>
+<td>Y</td>
+<td>翻译源语言</td>
+<td><a href="#languageList" class="doc-nav-item" data-index="1">语言列表</a>(可设置为auto)</td>
+</tr>
+<tr>
+<td>to</td>
+<td>TEXT</td>
+<td>Y</td>
+<td>译文语言</td>
+<td><a href="#languageList" class="doc-nav-item" data-index="1">语言列表</a>(不可设置为auto)</td>
+</tr>
+<tr>
+<td>appid</td>
+<td>INT</td>
+<td>Y</td>
+<td>APP ID</td>
+<td>可在<a class="goto-console" href="/api/trans/product/desktop?req=developer">管理控制台</a>查看</td>
+</tr>
+<tr>
+<td>salt</td>
+<td>INT</td>
+<td>Y</td>
+<td>随机数</td>
+<td></td>
+</tr>
+<tr>
+<td>sign</td>
+<td>TEXT</td>
+<td>Y</td>
+<td>签名</td>
+<td>appid+q+salt+密钥 的MD5值</td>
+</tr>
+</tbody></table>
+
+<p>签名生成方法如下：</p>
+
+<ol>
+<li><p>将请求参数中的 APPID(appid), 翻译query(q, 注意为UTF-8编码), 随机数(salt), 以及平台分配的密钥(可在管理控制台查看)按照 appid+q+salt+密钥 的顺序拼接得到字符串1。</p></li>
+
+<li><p>对字符串1做md5，得到32位小写的sign。</p></li>
+</ol>
+
+<p>知道了这些，我们就可以开始编写代码了，新建一个项目，地址在<a href="https://github.com/YHaoNan/vscode-tutorial/tree/master/vsc-extensions-tutorial-7">这里</a></p>
+
+<p>返回的格式请自己查看API吧。</p>
+
+<h2>编写代码</h2>
+
+<p>我们先把请求的库写好，我们统一使用Https的POST接口，然后使用axios库进行请求。</p>
+
+<p>请在工程目录下执行<code>npm install axios --save</code>安装axios库。</p>
+
+<p>因为appid和秘钥，还有目标语言都需要用户进行设置，所以我们编写<code>package.json</code>提供设置项：</p>
+
+<pre><code class="language-json">&#34;configuration&#34;: [{
+    &#34;title&#34;: &#34;Translator&#34;,
+    &#34;properties&#34;: {
+        &#34;ts.to&#34;: {
+        &#34;type&#34;: &#34;string&#34;,
+        &#34;default&#34;: &#34;zh&#34;,
+        &#34;description&#34;: &#34;The language that you wanna translate to&#34;
+        },
+        &#34;ts.appid&#34;: {
+        &#34;type&#34;: [
+            &#34;integer&#34;,
+            &#34;null&#34;
+        ],
+        &#34;default&#34;: null,
+        &#34;description&#34;: &#34;Your appid&#34;
+        },
+        &#34;ts.key&#34;: {
+        &#34;type&#34;: [
+            &#34;string&#34;,
+            &#34;null&#34;
+        ],
+        &#34;default&#34;: null,
+        &#34;description&#34;: &#34;Your key&#34;
+        }
+    }
+}]
+</code></pre>
+
+<p>然后提供一个util工具类，用于获取设置、生成随机数字和加密：</p>
+
+<pre><code class="language-typescript">import * as vscode from &#39;vscode&#39;
+import {Md5} from &#34;md5-typescript&#34;;
+export let getConfig = &lt;T&gt;(key: string): T=&gt;&lt;T&gt;vscode.workspace.getConfiguration().get&lt;T&gt;(key);
+
+//生成指定长度的随机数字
+export let genRandomNumber = (len: number): number=&gt;{
+    return getRandomInt(Math.pow(10,len-1),Math.pow(10,len)-1);
+}
+
+//生成Sign，也就是加密信息
+export let genSign = (appid: string,q: string,salt: string,key:string): string =&gt; Md5.init(appid+q+salt+key);
+
+function getRandomInt(min: number, max: number): number {  
+    var Range = max - min;  
+    var Rand = Math.random();  
+    return(min + Math.round(Rand * Range));  
+}
+</code></pre>
+
+<p>编写请求库</p>
+
+<pre><code class="language-typescript">import axios from &#39;axios&#39;
+import * as utils from &#39;./utils&#39;
+
+//返回码映射到错误信息
+const ERROR_MSG: {[index:string]:string}= {
+    &#39;52001&#39;: &#39;请求超时，请重试&#39;,
+    &#39;52002&#39;: &#39;系统错误&#39;,
+    &#39;52003&#39;: &#39;请检查您的appid是否正确&#39;,
+    &#39;54000&#39;: &#39;参数不完整&#39;,
+    &#39;54001&#39;: &#39;签名错误&#39;,
+    &#39;58000&#39;: &#39;客户端IP非法&#39;,
+    &#39;54005&#39;: &#39;长query请求过于频繁，请稍后再试&#39;,
+    &#39;58001&#39;: &#39;译文语言不支持&#39;,
+    &#39;58002&#39;: &#39;您的服务已关闭&#39;
+}
+
+const API_URL = &#39;https://fanyi-api.baidu.com/api/trans/vip/translate&#39;
+
+export async function translate(source:string): Promise&lt;string&gt;{
+    //准备数据
+    let data:{[index:string]:string} = {
+        q: source,
+        from: &#39;auto&#39;,
+        to: utils.getConfig(&#39;ts.to&#39;),
+        appid: utils.getConfig&lt;string&gt;(&#39;ts.appid&#39;),
+        salt: utils.genRandomNumber(10).toString(),
+        sign: &#39;&#39;
+    }
+    
+
+    data.sign = utils.genSign(data.appid,data.q,data.salt,utils.getConfig&lt;string&gt;(&#39;ts.key&#39;));
+
+    //设置header为 form-urlencoded
+    axios.defaults.headers.post[&#39;Content-Type&#39;] = &#39;application/x-www-form-urlencoded&#39;;
+    //设置transformRequest用于格式化数据 转成querystring 因为API规定不能直接用JSON格式的数据所以要如此苦逼的写这些
+    axios.defaults.transformRequest = [function (data) {
+        let ret = &#39;&#39;;
+        for (let it in data) {
+        ret += encodeURIComponent(it) + &#39;=&#39; + encodeURIComponent(data[it]) + &#39;&amp;&#39;;
+        }
+        return ret;
+    }];
+
+    try{
+        //发送请求
+        const result = await axios.post(API_URL,data);
+        
+        //如果有结果 则返回
+        if(result.data.trans_result){
+            let results: any[] = result.data.trans_result;
+            let targetStr:string = results.map(obj=&gt;obj.dst).join(&#39;\n&#39;);
+            return Promise.resolve(targetStr);
+        //如果没有结果 检查有没有错误码 有的话调用reject
+        }else if(result.data.error_code){
+            let msg = ERROR_MSG[result.data.error_code as string];
+            msg=msg?msg:&#39;未知错误&#39;;
+            return Promise.reject(msg);
+        }
+    }catch(e){
+        return Promise.reject(e.message);
+    }
+}
+</code></pre>
+
+<p>编写<code>extensions.ts</code>，暂时提供两种翻译手段，一个是通过<code>HoverProvider</code>提供悬停事件，在悬停的单词上翻译，一个是通过命令翻译当前编辑器的选中部分。</p>
+
+<pre><code class="language-typescript">import * as vscode from &#39;vscode&#39;;
+import {TranslateHoverProvider} from &#39;./hover&#39;
+import {translate} from &#39;./request&#39;
+export function activate(context: vscode.ExtensionContext) {
+    //注册Hover
+	context.subscriptions.push(
+		vscode.languages.registerHoverProvider(&#39;*&#39;,new TranslateHoverProvider())
+	);
+    //注册翻译选中范围的命令
+	context.subscriptions.push(
+		vscode.commands.registerTextEditorCommand(&#39;ns.translateSelection&#39;, async(editor)=&gt;{
+            let outputChannel = vscode.window.createOutputChannel(&#39;Translate Result&#39;);
+            //兼容多光标
+			editor.selections.forEach(async(selection)=&gt;{
+				if(!selection.isEmpty){
+                    let source = editor.document.getText(selection);
+					translateAndShow(outputChannel,source);
+				}
+			});
+		})
+	);
+}
+
+async function translateAndShow(outputChannel:vscode.OutputChannel,source:string){
+	try{
+		let result = await translate(source);
+		outputChannel.appendLine(result);
+		outputChannel.show();	
+	}catch(e){
+		vscode.window.showErrorMessage(&#39;翻译器：&#39;+e);
+	}
+}
+export function deactivate() {}
+</code></pre>
+
+<p>editor的<code>selections</code>是一个<code>Selection</code>对象的数组，记录的是所有用户选中的地方。<code>Selection</code>是<code>Range</code>的子类，<code>Range</code>表示一个范围，它有<code>start</code>和<code>end</code>属性，分别代表起始位置和结束位置，这两个属性是<code>Position</code>类型，它代表一个位置，有<code>line</code>和<code>character</code>属性，分别表示这个位置所在的行和字符在本行的位置。</p>
+
+<p>所以我们这里判断每一个selection是否是空，如果不是就翻译那一段文字。</p>
+
+<p>请大家自行在<code>package.json</code>中注册，我们的翻译插件要求vscode打开时就激活，所以在<code>package.json</code>中写：</p>
+
+<pre><code class="language-json">&#34;activationEvents&#34;: [
+    &#34;*&#34;
+]
+</code></pre>
+
+<p>写星之后打开VSCode直接激活插件。</p>
+
+<h2>扩展</h2>
+
+<p>添加翻译全文功能和翻译注释并替换原注释功能。</p>
+
+<p>翻译全文功能比较简单了，我们当用户没有选中段落的时候认为它想翻译全文，你可能会这样判断：</p>
+
+<pre><code class="language-typescript">if(editor.selections.length == 0)
+</code></pre>
+
+<p>或者</p>
+
+<pre><code class="language-typescript">//selection是当前的选中区域对象
+if(editor.selection == null)
+</code></pre>
+
+<p>可是这是不行的，因为上面说了，就算没选中也会有一个为空的selection，而且我们不能用<code>editor.selection</code>判断，因为用户可能有多个选中区域呢。</p>
+
+<p>所以我们打算在<code>editor.selections.forEach</code>里记录是否有被翻译的段落，如果没有那么就是全文了。</p>
+
+<pre><code class="language-typescript">let isHasTranslatedSelection = false;
+editor.selections.forEach(async(selection)=&gt;{
+    if(!selection.isEmpty){
+        let source = editor.document.getText(selection);
+        translateAndShow(outputChannel,source);
+        isHasTranslatedSelection = true;
+    }
+});
+if(!isHasTranslatedSelection){
+    translateAndShow(outputChannel,editor.document.getText());
+}
+</code></pre>
+
+<p>翻译全文很简单也很实用，下面一个就比较难了，下面是翻译注释并替换，这个也是很实用的功能，尤其在使用别人的库的时候，但这在不同的语言中需要不同的行为，因为不同的语言的注释块是不一样的。</p>
+
+<p>比如Python你需要兼容如下的注释：</p>
+
+<pre><code class="language-python"># Single Line Comment
+
+&#39;&#39;&#39;
+Multi Line Comment
+&#39;&#39;&#39;
+
+&#34;&#34;&#34;
+Multi Line Comment
+&#34;&#34;&#34;
+</code></pre>
+
+<p>而在Java中你需要兼容如下的注释：</p>
+
+<pre><code class="language-java">// Single Line Comment
+
+/**
+* Multi Line Comment
+*/
+</code></pre>
+
+<p>其实大部分语言都是用<code>/**/</code>实现多行注释的，Java也一样，上面的Java多行注释只是Java程序员约定俗成的习惯而已。</p>
+
+<p>我们的示例仅仅支持单行注释，其余的留给各位自行扩展，哈哈其实我觉得常见到的应该是多行。</p>
+
+<p>对于单行注释，我们有如下的正则：</p>
+
+<pre><code class="language-text/plain">(\/\/|#)(.*)
+</code></pre>
+
+<pre><code class="language-typescript">context.subscriptions.push(
+    vscode.commands.registerTextEditorCommand(&#39;ns.translateComment&#39;, async(editor)=&gt;{
+        let outputChannel = vscode.window.createOutputChannel(&#39;Translate Result&#39;);
+        for(let i=0;i&lt;editor.document.lineCount;i++){
+            let lineText = editor.document.lineAt(i).text;
+            let commentMatch = lineText.match(&#39;(\/\/|#)(.*)&#39;);
+            if(commentMatch){
+                let result = await translate(commentMatch[2]);
+                let start = lineText.indexOf(commentMatch[2]);
+                let end = start + commentMatch[2].length;
+                editor.edit(editorEdit=&gt;{
+                    editorEdit.replace(new vscode.Range(new vscode.Position(i,start),new vscode.Position(i,end)),result);
+                })
+        }
+    }})
+);
+</code></pre>
+
+<p>上面的代码我们使用了<code>editor.edit</code>来替换编辑器中的内容，<code>editor.edit</code>传入一个<code>callback</code>，这个回调方法里有个参数是<code>TextEditorEdit</code>类型的，它有<code>delete</code>、<code>insert</code>、<code>replace</code>等方法可以让我们操作编辑器。</p>
+
+<p>好了，差不多了，今天就到这里了。</p>
+
+<p>其实这离一个成熟的翻译插件还差得远呢，比如不能根据语言识别不同的注释，注释需要发送多次请求等，代码复用性不高等，这些都是问题。不过我们的目的不是开发插件，是学开发插件，哈哈，真正的成熟的插件还得靠您各位以后慢慢的开发呐～</p>
+
+<p><strong><a href="/post/vscode-ext1#目录">点此返回目录</a></strong></p>
+</body></html>

@@ -1,0 +1,108 @@
+<html><head><title>Vue组件的render函数</title></head><body><p>
+之前我们都是用<code>template</code>来给组件提供一个模板，但是这并不一定适合所有情况，而且它最后也会被编译为<code>render</code>的形式，效率比直接用<code>render</code>稍低。
+
+<code>render</code>函数提供了一个虚拟dom，也就是上一篇中提到的那个东西，你可以用这个虚拟dom来创建节点，绑定数据…
+
+直接用<code>render</code>写的代码会比较冗余，因为是用js而不是html，所以说<code>render</code>函数要看情况使用。
+
+
+下面的示例就需要用到render，我们需要一个标题组件，这个组件实现的功能是点击标题后自动给url添加锚点，但因为<code>template</code>中无法访问组件的作用域中的变量，所以这个组件无法工作。
+
+<code>html
+&lt;div id=&#34;app&#34; v-cloak&gt;
+    &lt;anchor :level=&#34;5&#34; title=&#34;特性&#34;&gt;特性&lt;/anchor&gt;
+&lt;/div&gt;
+&lt;script&gt;
+    Vue.component(&#39;anchor&#39;,{
+        template:&#39;&lt;a :href=&#34;\&#39;#\&#39;+title&#34; @mouseenter=&#34;setHover(true)&#34; @mouseleave=&#34;setHover(false)&#34;&gt;&lt;h&#39;+this.level+&#39;&gt;&lt;slot&gt;&lt;/slot&gt;&#39; +
+            &#39;&lt;span v-show=&#34;isHover&#34;&gt;#&lt;/span&gt;&#39; +
+            &#39;&lt;/h&#39;+this.level+&#39;&gt;&lt;/a&gt;&#39;,
+        props: {
+            level: {
+                type: Number,
+                default: 1
+            },
+            title: {
+                type: String,
+                required: true
+            }
+        },
+        data: function(){
+            return {
+                isHover: false,
+            }
+        },
+        methods: {
+            setHover: function (bol) {
+                this.isHover = bol;
+            }
+        },
+    })
+    var vm = new Vue({
+        el: &#39;#app&#39;
+    });
+&lt;/script&gt;
+</code>
+当然也可以使用<code>v-if</code>来判断<code>level</code>，生成不同的标题，但是这样写代码太冗余，所以这时就要用到render函数。
+
+<code>html
+&lt;div id=&#34;app&#34; v-cloak&gt;
+    &lt;anchor :level=&#34;1&#34; title=&#34;特性1&#34;&gt;特性&lt;/anchor&gt;
+    &lt;anchor :level=&#34;1&#34; title=&#34;特性2&#34;&gt;特性&lt;/anchor&gt;
+    &lt;anchor :level=&#34;1&#34; title=&#34;特性3&#34;&gt;特性&lt;/anchor&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+    Vue.component(&#39;anchor&#39;,{
+        render: function(h){
+            var _this = this;
+            if(this.isHover){
+                var span = h(&#39;span&#39;,&#39;#&#39;)
+            }
+            return h(&#39;a&#39;,{
+                attrs:{
+                    href: &#39;#&#39;+this.title
+                },
+                on:{
+                    mouseenter: function () {
+                        _this.isHover = true;
+                    },
+                    mouseleave: function () {
+                        _this.isHover = false;
+                    }
+                }
+            },[
+                h(&#39;h&#39;+this.level,[
+                    this.title,
+                    span
+                ])
+            ])
+        },
+        props: {
+            level: {
+                type: Number,
+                default: 1
+            },
+            title: {
+                type: String,
+                required: true
+            }
+        },
+        data: function(){
+            return {
+                isHover: false,
+            }
+        },
+    })
+    var vm = new Vue({
+        el: &#39;#app&#39;
+    });
+&lt;/script&gt;
+</code>
+
+除了把<code>template</code>替换成<code>render</code>，其他代码没啥变化，<code>render</code>函数传入一个参数，这个参数是用于创建虚拟节点的方法，我们调用它就可以创建虚拟节点。这个方法可以有三个参数，第一个是必选参数是，是html标签名，第二个是可选参数，是该节点的数据对象，用于绑定一些数据和监听器的东西，第三个也是可选参数，是子节点列表。
+
+我们上面的render代码创建了一个a标签，并且绑定了href为<code>&#39;#&#39;+this.title</code>，用于点击后自动修改url，并且监听他的鼠标事件，去修改<code>isHover</code>，用于显示锚点图标，很多博客站的标题锚点功能都是这样的，包括本博客，就是鼠标进入标题时显示一个图标（本实例中是#号）。然后创建标题节点，作为a的子节点，这里可以访问到组件的作用域，所以<code>&#39;h&#39;+this.level</code>是可以的，然后给它两个子节点，一个是<code>this.title</code>，就是传入的标题，一个是<code>span</code>，这个<code>span</code>是在<code>render</code>函数最开始判断<code>isHover</code>动态创建的，因为<code>render</code>函数中不能用<code>v-if</code>这种命令，所以只能用js提供的结构体来满足功能。
+
+</p>
+</body></html>

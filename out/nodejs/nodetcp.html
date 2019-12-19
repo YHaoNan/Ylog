@@ -1,0 +1,317 @@
+<html><head><title>NodeJS中的网络操作</title></head><body><p>
+唉，睁眼睛看一会书就要去练车的感觉真不怎么样，没啥时间干自己的事，本来计划好的假期学习计划几乎被全盘推翻。哈哈，还好十九号就考科二了，考完之后就不会去得那么勤了。
+
+这几天在驾校无聊等待的过程中一直在刷《NodeJS高级编程》，然后回家还要把所有活都干完后，有空了才能把代码实现一遍，所以也一直没写笔记，今天补点，嗯补一点。
+
+</p>
+
+<h2>构建TCP服务器
+</h2>
+
+<p>nodejs的事件发射器模式让本来在其它语言中生涩难懂的socket API变得简单灵活起来。
+
+在nodejs中进行网络操作，你需要引入<code>net</code>包，下面创建一个最简单的回声服务器。
+
+<code>echo_server.js</code>
+
+<code>javascript
+require(&#39;net&#39;).createServer(socket=&gt;{
+    socket.on(&#39;data&#39;,data=&gt; socket.write(data))
+}).listen(4000);
+</code>
+
+使用<code>net</code>模块中的<code>createServer</code>方法创建一个服务器对象，然后传入一个回调，这个回调会在有连接接入时被回调，它的参数就是连接的socket对象，下面我们监听这个对象的<code>data</code>事件，当接受到客户端传来的数据时，就会发射<code>data</code>事件，它的回调方法的参数是发送过来的数据，然后我们通过socket对象的<code>write</code>方法把接收到的数据发送回去。
+
+最后别忘了调用服务器对象的<code>listen</code>方法才实际的把服务绑定在了4000端口上进行监听，这样客户端才能从4000端口连接进来。
+
+我们使用<code>nc</code>进行测试：
+<code>bash
+~ » nc 127.0.0.1 4000
+Hello
+Hello
+What is your name
+What is your name
+</code>
+
+</p>
+
+<h2>创建一个mini的聊天服务器
+</h2>
+
+<p><code>javascript
+var socketList = [];
+require(&#39;net&#39;).createServer((socket)=&gt;{
+    
+    socketList.push(socket);
+    socket.write(&#39;Welcome to the chat room , online : &#39;+socketList.length+&#39;\n&#39;);
+    sendBroadCastMessage(socket,socket.address()[&#39;address&#39;]+&#39; join the room!&#39;+&#39;\n&#39;);
+
+    socket.on(&#39;data&#39;,(data)=&gt;{
+        sendBroadCastMessage(socket,socket.address()[&#39;address&#39;]+&#39; say :&#39;+data);
+    })
+}).listen(10404);
+
+function sendBroadCastMessage(besideSocket,message){
+    socketList.forEach((s)=&gt;{
+        if(besideSocket!=s)
+            s.write(message);
+    })
+}
+</code>
+上面代码创建了一个聊天服务器，不管它代表了什么意思，我们先用nc测试一下：
+<code>用户1</code>
+
+<code>bash
+/mnt/d/blog(dev*) » nc 127.0.0.1 10404
+Welcome to the chat room , online : 1
+::ffff:127.0.0.1 join the room!
+::ffff:127.0.0.1 say :Hi
+Helo~
+</code>
+
+<code>用户2</code>
+
+<code>bash
+~ » nc 127.0.0.1 10404
+Welcome to the chat room , online : 2
+Hi
+::ffff:127.0.0.1 say :Helo~
+</code>
+
+这个聊天室确实可以运行，只不过因为我都是在本地连接，所以所有人的ip地址都是一样的。。。啊哈哈。
+
+看上面的代码，我们维护了一个<code>socketList</code>来保存所有的套接字，每当进来一个连接就push到这个列表中。我还编写了一个<code>sendBroadCastMessage</code>方法来广播数据，只不过很多时候广播数据需要排除某个人，比如在第6行的代码，我们向所有房间里的人广播有一个新用户进入房间时就要排除这个新用户，所以<code>sendBroadCastMessage</code>方法的第一个参数理所当然是排除的那个套接字对象。
+
+每当从某个套接字中接收到数据时，也就是说接收到<code>data</code>事件时，向所有人转发这条消息，当然排除发送消息的用户。
+
+</p>
+
+<h2>构建tcp客户端实现更强大的聊天室
+</h2>
+
+<p><code>javascript
+const printUsage = require(&#39;./usage&#39;).printUsage;
+
+const host = &#39;127.0.0.1&#39;;
+const port = 4000;  
+var conn = require(&#39;net&#39;).createConnection(port,host,()=&gt;{
+    process.stdin.resume();
+    process.stdin.on(&#39;data&#39;,data=&gt;{
+        data = convertSingleLine(data.toString());
+        if(data==&#39;/quit&#39;||data==&#39;/exit&#39;){
+            process.stdin.pause();
+            conn.end();
+            console.log(&#39;Bye!Have a nice day!&#39;)
+        }else if(data == &#39;/help&#39;){
+            printUsage();
+        }else
+            conn.write(data);
+    });
+});
+
+conn.on(&#39;data&#39;,data=&gt;{
+    process.stdout.write(data);
+});
+conn.on(&#39;error&#39;,err=&gt;{
+    console.log(&#39;Got an error : &#39;+err.message);
+});
+conn.on(&#39;close&#39;,()=&gt;{
+    console.log(&#39;Bye!&#39;);
+    process.stdin.pause();
+});
+
+function convertSingleLine(string){
+    return string.replace(/[\r\n]/g,&#34;&#34;);
+}
+</code>
+
+上面的代码创建了一个TCP客户端，使用<code>createConnection</code>方法，当连接成功后回调参数被调用。
+
+我们通过process.stdin来接受用户的输入，并且发送给服务器。
+
+<code>createConnection</code>返回了一个连接对象，我们监听这个连接对象发出的事件，它的事件其实和tcp服务器差不多。
+
+接下来放上服务器端的代码：
+<code>javascript
+const getCommand = require(&#39;./command&#39;).getCommand;
+const commandCallback = {
+    rename:(socket,newnick)=&gt;{
+        newnick = newnick.replace(/\ +/g,&#34;&#34;);
+        newnick = convertSingleLine(newnick);
+        var i = connectionList.indexOf(socket);
+        if(nickNameList.indexOf(newnick)==-1 &amp;&amp; i!=-1 &amp;&amp; newnick!=&#39;&#39;){
+            var oldName = nickNameList[i];
+            nickNameList[i] = newnick;
+            sendMessage(socket,&#39;Your name has changed!&#39;);
+            postMessage(socket,oldName +&#39; changed his/her name to &#39;+newnick);
+        }else{
+            sendMessage(socket,&#39;Change name faild,may be this name is already used or your input in not correct!&#39;)
+        }
+    },
+    gname:(socket,arg)=&gt;{
+        socket.write(&#39;Your name is &#39;+getNameBySocket(socket)+&#39;\n&#39;);
+    },
+    kickout:(foo,name)=&gt;{
+        var index = nickNameList.indexOf(name);
+        nickNameList.splice(index,1);
+        var socket = connectionList.splice(index,1)[0];
+        sendMessage(socket,&#39;You were kick out from the room!&#39;);
+        socket.end();
+        postMessage(socket,name+&#39; was kick out from the room!&#39;);
+    },
+    list:(foo,bar)=&gt;{
+        nickNameList.forEach(str=&gt;{
+            console.log(str);
+        })
+    }
+}
+var connectionList = [];
+var nickNameList = [];
+const server = require(&#39;net&#39;).createServer(socket=&gt;{
+    var tempName = Date.now();
+    connectionList.push(socket);
+    nickNameList.push(tempName);
+    sendMessage(socket,&#39;Welcome to the chatroom!\nYour default nick name is &#39;+tempName+&#39;.\nType &#34;help&#34; to show the usage!\n&#39;+&#39;Online:&#39;+connectionList.length);
+    postMessage(socket,tempName+&#39; join the room!&#39;);
+
+    socket.on(&#39;data&#39;,data=&gt;{
+        var command = getCommand(data.toString());
+        if(command!=null){
+            commandCallback[command[0]](socket,command[1]);
+        }else{
+            postMessage(socket,getNameBySocket(socket)+&#39; says : &#39;+data);
+        }
+    })
+    socket.on(&#39;close&#39;,()=&gt;{
+        var index = connectionList.indexOf(socket);
+        if(index==-1)return;
+        nickNameList.splice(index,1);
+        var socket = connectionList.splice(index,1)[0];
+        postMessage(socket,name+&#39; leave from the chatroom!&#39;);
+    });
+    socket.on(&#39;error&#39;,err=&gt;{
+        console.log(&#39;Got an error : &#39;+err.message);
+    })
+}).listen(4000);
+
+function getSocketByName(name){
+    var i = nickNameList.indexOf(name);
+    return connectionList[i];
+}
+function getNameBySocket(socket){
+    var i = connectionList.indexOf(socket);
+    return nickNameList[i];
+}
+function postMessage(besides,message){
+    connectionList.forEach(socket=&gt;{
+        if(socket != besides){
+            socket.write(message+&#39;\n&#39;);
+        }
+    })
+}
+
+function sendMessage(socket,message){
+    socket.write(message+&#39;\n&#39;);
+}
+
+function convertSingleLine(string){
+    return string.replace(/[\r\n]/g,&#34;&#34;);
+}
+server.on(&#39;listening&#39;,()=&gt;{
+    process.stdin.resume();
+    process.stdin.on(&#39;data&#39;,data=&gt;{
+        var command = getCommand(convertSingleLine(data.toString()));
+        if(command){
+            commandCallback[command[0]](null,command[1]);            
+        }else{
+            console.log(&#39;Unknow command &#39;+data);
+        }
+    })
+})
+</code>
+
+其实只看<code>createServer</code>方法的回调中的内容，和最初的聊天服务器差不多，只是更加完整，加了错误处理什么的。
+
+然后其他的代码基本都是为用户名系统和命令系统服务，这个高级聊天室支持使用命令系统，用户可以使用命令修改自己的用户名，服务器能使用命令踢人等等，不过用户名和命令并非一个聊天服务器必须存在的元素，所以不做解释，因为他们并没有那么重要。
+
+然后就是其他的工具类的代码：
+<code>command.js</code>
+<code>javascript
+&#34;use strict&#34;;
+exports.__esModule = true;
+function getCommand(commandStr) {
+    if (commandStr.charAt(0) != &#39;/&#39;)
+        return null;
+    else {
+        var firstWhiteSpaceIndex = commandStr.indexOf(&#39; &#39;);
+        if (firstWhiteSpaceIndex != -1 &amp;&amp; firstWhiteSpaceIndex &lt; commandStr.length) {
+            var command = commandStr.substr(1, firstWhiteSpaceIndex - 1);
+            var arg = commandStr.substr(firstWhiteSpaceIndex + 1);
+            return [command, arg];
+        }
+        return null;
+    }
+}
+exports.getCommand = getCommand;
+</code>
+
+<code>usage.js</code>
+<code>javascript
+function printUsage(){
+    console.log(&#39;Command:\n\t1. /rename &lt;Name&gt; -- Modify your nickname in chatroom.\n\t 2. /exit or /quit -- Exit from chatroom.\n\t 3. /help -- Show usage.\nAdmin Command:\n\t4. /gname &lt;any string&gt; -- Get your nickname.Note that the option &lt;any string&gt; is must exits.\n\t&#39;+
+    &#39;1. /kickout &lt;Name&gt; -- Kickout a user by nickname.\n\t2. /close -- Close chatroom.\n\t3. /post &lt;Message&gt; -- Post some message.&#39;);
+}
+exports.printUsage = printUsage;
+</code>
+
+以下是该聊天服务器的测试：
+<code>启动server</code>
+<code>cmd
+PS D:\learn\node\tcp_cs_test&gt; node .\server.js
+</code>
+
+<code>user1</code>
+<code>cmd
+PS D:\learn\node\tcp_cs_test&gt; node .\client.js
+Welcome to the chatroom!
+Your default nick name is 1563328661593.
+Type &#34;help&#34; to show the usage!
+Online:1
+1563328672755 join the room!
+1563328672755 says : Anyone here&gt;
+Yep , I am here
+1563328672755 says : How to modify my nickname?
+Tryna type &#39;/help&#39;.
+1563328672755 changed his/her name to LILPIG
+LILPIG says : Oh,got it ! Thanks!
+Nothing... xD
+</code>
+
+<code>user2</code>
+<code>cmd
+PS D:\learn\node\tcp_cs_test&gt; node .\client.js
+Welcome to the chatroom!
+Your default nick name is 1563328672755.
+Type &#34;help&#34; to show the usage!
+Online:2
+Anyone here&gt;
+1563328661593 says : Yep , I am here
+How to modify my nickname?
+1563328661593 says : Tryna type &#39;/help&#39;.
+/help
+Command:
+        1. /rename &lt;Name&gt; -- Modify your nickname in chatroom.
+         2. /exit or /quit -- Exit from chatroom.
+         3. /help -- Show usage.
+Admin Command:
+        4. /gname &lt;any string&gt; -- Get your nickname.Note that the option &lt;any string&gt; is must exits.
+        1. /kickout &lt;Name&gt; -- Kickout a user by nickname.
+        2. /close -- Close chatroom.
+        3. /post &lt;Message&gt; -- Post some message.
+/rename LILPIG
+Your name has changed!
+Oh,got it ! Thanks!
+1563328661593 says : Nothing... xD
+</code>
+</p>
+</body></html>

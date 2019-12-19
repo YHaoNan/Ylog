@@ -1,0 +1,10 @@
+label: LILPIG的博客
+theme: default
+assets: ${POSTDIR}/assets/
+#cdn: https://xxxxxxxxxx/
+
+plugins:
+
+cmdPlugins:
+  gitpush:
+    remote: https://xxxxxxxx.git

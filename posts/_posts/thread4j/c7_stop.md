@@ -1,0 +1,763 @@
+---
+title: （六）线程取消和关闭 —— 《Java并发编程实战》
+date: 2019-07-31 17:19:30
+tags: [java,thread]
+categories: Java多线程
+---
+
+## 取消线程的思路
+在单线程中如果关闭一个任务，我们习惯了直接去调用提供的`close`、`shutdown`等诸如此类的关闭方法，比如流操作，但是在多线程中就并非这么简单了，你永远不能直接关闭一个线程（其实可以但你不能这样去做）。因为在多线程编程中，你可能根本不知道子线程此时的任务进度，不知道子线程当前在干什么，如果你贸然的直接关闭子线程，那么子线程很可能会丢失当前的状态，并且任务还没做完就被直接关闭可能会造成一些安全隐患。
+
+在Java中，早期有个`shutdown`方法可以直接关闭线程，但是现在它已经废弃了，Java不推荐你这么做，取而代之的是一种基于信号的协商模式，即给子线程发送关闭信号，子线程检测到关闭信号就会安全的暂停当前任务，做一些释放资源的操作，然后结束掉。这是一个设计良好的线程类应该做的事，当然线程类也可以完全忽略这个信号，继续执行，总之，基于协商模式的取消操作会发生什么结果完全取决于线程自己，因为也只有线程自己最清楚自己当前执行的任务。
+
+造成需要结束线程运行的原因有以下几种：
+- 用户取消
+- 发生错误
+- 某个取消的条件满足
+
+我们看一个简单的结束线程的例子：
+```java
+public class ThreadStop extends Thread{
+    private volatile boolean isStop = false;
+
+    @Override
+    public void run() {
+        super.run();
+        while (!isStop){
+            try {
+                Thread.sleep(1000);
+                System.out.println("RUNNING");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    public void cancel(){isStop = true;}
+
+    public static void main(String[] args)  {
+        ThreadStop thread = new ThreadStop();
+        thread.start();
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            thread.cancel();
+        }
+    }
+}
+```
+线程使用一个布尔变量`isStop`来控制线程的停止，并提供`cancel`方法让外部停止线程，在调用者线程中（示例中是主线程）先等待了5秒然后调用了`cancel`,在`finally`中调用能保证`cencel`被正常执行，否则该程序将永远不能关闭。因为`isStop`的控制权被交给了外界，也就是相当于发布到了外界，虽然`cencel`中的操作是原子的，但不能保证可见性，所以加上`volatile`。
+
+上面的代码还是有问题，如果在`while`循环中调用了阻塞方法，比如该线程是一个生产者，现在产品队列已经满了，而且所有消费者线程已经正常的结束，也就是说永远不会有消费者拿走产品给生产者留下空位，这时将永远阻塞在向产品队列中添加产品这一操作上，无法退出，程序将一直运行。如下面的示例所示：
+
+```java
+public class NeverStopThread extends Thread{
+    private volatile boolean isStop = false;
+
+    private final BlockingQueue<String> blockingQueue;
+
+    public NeverStopThread(BlockingQueue<String> blockingQueue){
+        this.blockingQueue = blockingQueue;
+    }
+    @Override
+    public void run() {
+        super.run();
+        while (!isStop){
+            try {
+                System.out.println("Producer putting...");
+                blockingQueue.put("STRING");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void cancel(){
+        isStop = true;
+        System.out.println("User cancel...");
+    }
+
+    public static void main(String[] args)  {
+        BlockingQueue<String> blockingQueue = new ArrayBlockingQueue(5);
+        NeverStopThread thread = new NeverStopThread(blockingQueue);
+        thread.start();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            thread.cancel();
+        }
+    }
+}
+```
+这个示例将一直运行，不能停止。分析下，我们的问题就是Java提供的API，`BlockingQueue`不了解我们线程的停止机制，它无法去检测我们的停止标志`isStop`。所以这时就该用Java提供的停止机制了，这样Java内置的阻塞模块或者其他模块就能检测到我们的停止状态了。
+
+## interrupt
+Thread类提供了几个用于设置停止标志的方法：
+
+方法名|返回值|功能
+:-:|:-:|:-:|:-:
+interrupt|void|设置停止状态
+isInterrupted|boolean|是否处于停止状态
+*interrupted*|boolean|查看是否处于停止状态，如果是，则恢复状态
+
+
+有了规定的统一的停止信号操作，一些官方提供的阻塞方法就可以检测到线程是否停止了，如果检测到则会取消阻塞，清除中断状态并抛出`InterruptedException`，这也是为啥我们通常见到的阻塞方法都会抛出`InterruptedException`。
+
+我们改写上面的`NeverStopThread`，让它能够正确的停止而不是一直阻塞在`blockingQueue.put`方法那。
+```java
+public class CanStopThread extends Thread{
+    private final BlockingQueue<String> blockingQueue;
+
+    public CanStopThread(BlockingQueue<String> blockingQueue){
+        this.blockingQueue = blockingQueue;
+    }
+    @Override
+    public void run() {
+        super.run();
+        try{
+            while (!Thread.currentThread().isInterrupted()){
+                System.out.println("Producer putting...");
+                blockingQueue.put("STRING");
+            }
+            throw new InterruptedException();
+        }catch (InterruptedException e){
+            System.out.println("Thread was interrupted!");
+        }
+    }
+
+    public static void main(String[] args)  {
+        BlockingQueue<String> blockingQueue = new ArrayBlockingQueue(5);
+        CanStopThread thread = new CanStopThread(blockingQueue);
+        thread.start();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            thread.interrupt();
+        }
+    }
+}
+```
+因为使用了官方提供的取消方法，所以`blockingQueue.put`会正确的检测到主线程设置的停止状态并抛出异常，我们在线程的`run`方法里捕获它，打印一条消息后退出。还有一种情况是`put`操作后被终端，`while`条件不满足，那么我们就自行抛出异常，然后再自己捕获，这样写起来简洁一些。
+
+我们看下阻塞队列的`put`操作的代码，分析下它是怎么检测的，`put`方法使用一个`Condition`工具类实现阻塞，实现阻塞的主要是`await`方法，如下所示：
+```java
+public final void await() throws InterruptedException {
+    if (Thread.interrupted())
+        throw new InterruptedException();
+    Node node = addConditionWaiter();
+    int savedState = fullyRelease(node);
+    int interruptMode = 0;
+    while (!isOnSyncQueue(node)) {
+        LockSupport.park(this);
+        if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+            break;
+    }
+    if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+        interruptMode = REINTERRUPT;
+    if (node.nextWaiter != null) // clean up if cancelled
+        unlinkCancelledWaiters();
+    if (interruptMode != 0)
+        reportInterruptAfterWait(interruptMode);
+}
+```
+
+在入口处会判断一次`Thread.interrupted`，这是那个会清除状态的静态方法，如果返回`true`证明当前线程已经被取消了，就直接抛出`InterruptedException`，也就是说当发生阻塞时在入口处就会判断一次是否取消，如果取消立即返回。
+
+下面的代码虽然看不太懂，从语义上也可以分析出来，主要阻塞功能是依靠那个`while`循环完成的，每次循环都会调用`checkInterruptWhileWaiting`，如果方法不返回0就跳出，我们看看这个方法：
+```java
+private int checkInterruptWhileWaiting(Node node) {
+    return Thread.interrupted() ?
+        (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) :
+        0;
+}
+```
+还是调用了`Thread.interrupted`，而且返回了类似状态的东西，反正就是只要线程被取消了就不返回0，也就是让`await`中的主循环退出，也就是说`await`的阻塞主循环中一直在判断线程的取消状态，如果取消就结束阻塞。最后一个`if`判断了跳出时的返回值，如果不是0，就是阻塞是因为线程取消结束的话就调用`reportInterruptAfterWait`，这个方法就是抛出了个`InterruptedException`异常方便我们在线程中捕获，篇幅问题不放了，感兴趣的自己扒代码。
+
+尽管我们没有分析其他阻塞方法的代码，但是原理大同小异，我们知道了Java中的阻塞方法当检测到线程被`interrupt`方法取消时的操作了，就是重置取消状态（设置为未取消）并抛出异常。
+
+## 响应中断
+线程和任务一般是分开进行的，可能就像下面的代码一样，用一个`doSomething`方法去执行任务，尤其当我们用`Executor`时更能体会到任务和线程的分离，我们一般在线程执行的任务中如果发生中断，有两种响应策略让线程感知到中断并执行退出操作，分情况使用不同的响应策略。假设我们有这样的代码：
+
+```java
+public class HandleInterrupt {
+    private final BlockingQueue<String> queue;
+
+    public HandleInterrupt(BlockingQueue<String> queue){
+        this.queue = queue;
+    }
+
+    public void start(){
+        new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                while (!Thread.currentThread().isInterrupted()){
+                    doSomething();
+                }
+                //退出操作
+                System.out.println("Exit...");
+            }
+        }.start();
+    }
+}
+```
+
+假设`doSomething`中会执行阻塞队列中的阻塞方法，那么在`doSomething`中当catch到阻塞方法的`InterruptedException`时有两种解决办法，一是直接向上抛出，然后修改我们这个线程的主循环，添加`try-catch`语句，这样线程就能感应到在执行`doSomething`中的阻塞方法时被中断了，如果不抛出则`while`的条件不会检测到线程被中断，因为阻塞方法会重置中断状态，刚刚我们分析过了。
+
+第一种方法：
+```java
+private void doSomething() throws InterruptedException {
+    queue.take();
+}
+```
+在这种方法中我们直接向上抛出就好了，当然如果你需要记录一些状态，也可以catch住后做一些操作再抛出。然后需要在线程主循环里用`try-catch`捕获，第二中响应策略则是重置中断状态，就是调用`interrupt`方法重新中断当前线程，这样线程的`while`条件就能检测到了。
+
+```java
+private void doSomething() {
+    try {
+        queue.take();
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
+}
+```
+当然这种方法更适合在`Runnable`这种接口中规定不允许抛出异常的方法中使用，而且这种方法还可以进行重试操作，貌似灵活性更高。要注意的是如果执行重试操作的话重新中断当前线程操作一定要在最后重试也失败时调用，因为重置完线程已经是中断的了，阻塞操作一开始就会直接返回，详见上面分析阻塞队列检测中断代码的部分。
+
+如果任务中没有阻塞方法，你也可以自己通过轮询来检测线程状态。
+
+有些时候你如果是编写任务，你不知道当前任务执行在哪个线程，也不知道该线程对与中断的处理是怎样的，一个设计不好的线程可能完全没有做中断处理，也就是说你调用一万次`interrupt`它也会固执的继续执行，所以当你不了解线程的中断处理策略时请不要贸然调用它的`interrupt`方法。
+
+## 处理不可中断的阻塞
+大部分的阻塞操作都会判断线程状态并结束阻塞状态，但是也有不能检测的阻塞，这会造成线程无法及时的终止，我们来看看在这些不能中断的阻塞中该如何检测中断并结束运行。
+
+先来看看有哪些不可中断的阻塞：
+- **Socket I/O**  
+    它的输入和输出流因为要经过网络所以会产生阻塞，而且这个阻塞不会检测线程的中断状态，但是通过关闭底层的套接字连接可以使流的`read`和`write`方法抛出`SocketException`
+- **I/O**  
+    和SocketIO一样，Java的同步IO依然不会检测中断状态。当中断一个正在`InterruptibleChannel`上等待的线程时，将抛出`ClosedByInterruptExcepiton`并关闭链路，当关闭一个`InterruptibleChannel`时将导致所有在链路操作上阻塞的线程都抛出`AsynchronousCloseException`，大多数标准Channel都实现了`InterruptibleChannel`
+- **Selector的异步I/O**  
+    如果一个线程在调用`Selector.select`方法时阻塞了，那么调用`close`或`wakeup`方法会使线程抛出`ClosedSelectorException`并提前返回。
+- **获取某个锁**  
+    如果线程等待某个内置锁而阻塞，造成无法响应中断，因为线程认为它肯定会获得锁，所以将不理会中断请求，但是在`Lock`类中提供了`lockInterruptibly`方法，该方法允许在等待一个锁的同时仍能响应中断。
+
+
+我们看一个从`socket`套接字中不断读取数据的线程代码：
+```java
+public class ReaderThread extends Thread{
+    private final Socket socket;
+    private final InputStream in;
+    public ReaderThread(Socket socket)throws IOException{
+        this.socket = socket;
+        this.in = socket.getInputStream();
+    }
+
+    public void run(){
+        try{
+            byte[] buf = new byte[1024];
+            while (!Thread.currentThread().isInterrupted()){
+                int count = in.read(buf);
+                if (count<0)
+                    break;
+                else if (count>0){
+                    System.out.println(new String(buf));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        ServerSocket serverSocket = new ServerSocket(11111);
+        Socket socket = serverSocket.accept();
+        ReaderThread readerThread = new ReaderThread(socket);
+        readerThread.start();
+        Thread.sleep(1000);
+        //中断线程
+        readerThread.interrupt();
+    }
+}
+```
+我们可以看到，`read`方法虽然会在网络操作中产生阻塞，但是它并未抛出任何异常，也就是说他没有检测当前线程是否停止的能力，就算我们从`while`中判断线程是否停止也不能及时停止线程，因为`while`的每次判断要在`read`操作的阻塞之后才会执行。我们用nc连接并尝试发送消息发现消息被打印到控制台了，这不是我们所期待的，我们希望中断线程后立即停止所有工作。
+
+`nc测试操作`
+```bash
+➜  cmder nc localhost 11111
+asdf
+```
+`程序打印`
+```text/plain
+asdf               
+```
+我们通过修改ReaderThread的`interrupt`方法来是修改程序，当`interrupt`被调用，立即关闭`socket`，此时`read`方法会抛出一个未检测异常`SocketException`，我们再捕获它，结束操作。
+
+```java
+public class ReaderTheadImprove extends Thread{
+    private final Socket socket;
+    private final InputStream in;
+    public ReaderTheadImprove(Socket socket)throws IOException{
+        this.socket = socket;
+        this.in = socket.getInputStream();
+    }
+
+    @Override
+    public void interrupt() {
+        try {
+            in.close();
+            socket.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        finally {
+            super.interrupt();
+        }
+    }
+
+    public void run(){
+        super.run();
+        try{
+            byte[] buf = new byte[1024];
+            while (!Thread.currentThread().isInterrupted()){
+                int count = in.read(buf);
+                if (count<0)
+                    break;
+                else if (count>0){
+                    System.out.println(new String(buf));
+                }
+            }
+        } catch (IOException e) {
+            /* Exit */
+        }
+        System.out.println("Thread was interrupted...");
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        ServerSocket serverSocket = new ServerSocket(11111);
+        Socket socket = serverSocket.accept();
+        ReaderTheadImprove readerThread = new ReaderTheadImprove(socket);
+        readerThread.start();
+        Thread.sleep(1000);
+        readerThread.interrupt();
+    }
+}
+
+```
+
+现在再通过nc连接，一秒钟后会自动退出，程序的控制台会打印`Thread was interrupted...`。
+
+分析下上面的代码，我们通过修改`ReaderThread`的`interrupt`方法，在方法中关闭`InputStream`和`Socket`连接，然后再在finally块中调用父类的`interrupt`设置关闭状态，`Socket`关闭时`read`方法会抛出一个`SocketException`，它是`IOException`的子类，所以我们的`catch`能捕获它。这样就完成了`read`方法的阻塞中断。
+
+## 用`newTaskFor`封装非标准取消
+我们可以把上面的代码封装成用`Executor`和`Future`版本的，并且通过重写`future`的`cancel`方法关闭`socket`，通过重写`ThreadPoolExecutor`的`newTaskFor`方法创建`CancellableTask`。
+
+```java
+public class ReaderThreadWithExecutor {
+    interface CancellableTask<T> extends Callable<T>{
+        void cancel();
+        RunnableFuture<T> newTask();
+    }
+
+    public class CancellingExecutor extends ThreadPoolExecutor{
+
+
+        public CancellingExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+        }
+
+        protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable){
+            if (callable instanceof CancellableTask)
+                return ((CancellableTask<T>) callable).newTask();
+            else
+                return super.newTaskFor(callable);
+        }
+    }
+
+    public abstract class SocketUsingTask<T> implements CancellableTask<T>{
+        private Socket socket;
+        protected synchronized void setSocket(Socket s){socket = s;}
+        
+        public synchronized void cancel(){
+            try{
+                if (socket!=null)
+                    socket.close();
+            } catch (IOException e) {
+            }
+        }
+
+        public RunnableFuture<T> newTask(){
+            return new FutureTask<T>(this){
+                @Override
+                public boolean cancel(boolean mayInterruptIfRunning) {
+                    try {
+                        SocketUsingTask.this.cancel();
+                    }finally {
+                        return super.cancel(mayInterruptIfRunning);
+                    }
+                }
+            };
+        }
+    }
+
+}
+```
+
+然后可以通过继承`SocketUsingTask`并实现`call`方法进行socket流的读取操作。使用`CancellingExecutor`，在`submit`时返回的`Future`是我们自己创建的，它的`cancel`方法会执行我们自己的取消逻辑，这同样可以使我们的任务中的`read`方法响应中断。
+
+## 停止基于线程的服务
+就像我们使用线程池一样，我们要退出程序或关闭所有任务时我们不能直接关闭每个线程，而是要通过线程池提供的方法关闭，线程只能由它的所有者关闭，它的所有者要向外界提供一个方法用于关闭所有的线程。
+
+在`ExecutorService`中提供了`shutdown`和`shutdownNow`来停止服务的运行。
+
+我们来编写一个日志系统，这个日志系统使用`BlockingQueue`提供一个日志队列，并通过一个打印线程不断地从`BlockingQueue`中取出要打印的信息。
+
+```java
+public class LogWriter {
+    private final BlockingQueue<String> msgQueue;
+    private final Thread printThread;
+
+    public LogWriter(){
+        this.msgQueue = new ArrayBlockingQueue(20);
+        printThread = new PrintThread();
+    }
+
+    public void start(){
+        printThread.start();
+    }
+
+
+    public void log(String msg) throws InterruptedException {
+        msgQueue.put(msg);
+    }
+    class PrintThread extends Thread{
+        private final PrintWriter writer = new PrintWriter(System.out);
+        @Override
+        public void run() {
+            super.run();
+            try {
+                while (true)
+                    writer.println(msgQueue.take());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+              writer.close();
+            }
+        }
+    }
+}
+```
+这是个无法停止的日志服务，在之后我们会给它添加停止功能，我们创建一个用例：
+```java
+public class LogWriterUse {
+    private final LogWriter writer = new LogWriter();
+
+    static class ConsumerThread extends Thread{
+        private final LogWriter writer;
+
+        public ConsumerThread(LogWriter writer){
+            this.writer = writer;
+        }
+        @Override
+        public void run() {
+            super.run();
+            while (true){
+                try {
+                    writer.log("CONSUMER "+Thread.currentThread().getName());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        LogWriterUse self = new LogWriterUse();
+        self.writer.start();
+        for (int i=0;i<10;i++){
+            new ConsumerThread(self.writer).start();
+        }
+    }
+}
+```
+
+其实这是一个多生产者单消费者模式，`LogWriter`是消费者，所有使用它的线程是生产者，对于`LogWriter`来说，它永远无法知道生产者都是谁。
+
+好在`BlockingQueue`的阻塞方法都能响应中断，我们直接在`stop`方法中把线程中断貌似就可以了，我们试试：
+`LogWriter.java`
+```java
+public void stop(){
+    printThread.interrupt();
+}
+```
+
+`LogWriterUse.java -> main`
+```java
+for (int i=0;i<10;i++){
+    new ConsumerThread(self.writer).start();
+}
+
+Thread.sleep(2000);
+self.writer.stop();
+```
+我们调用`stop`后，消费者线程确实停止了，因为控制台打印停止了，但是程序却没有退出，这是为何？
+
+因为消费者线程停止了，但是生产者其实并不知道，它们还在不停的生产，而只要它们把队列塞满，它们就会全部阻塞在外面，永远的阻塞。。。并且在关闭那一刻，队列中之前原有的打印请求也会丢失，因为消费者已经关闭。
+
+解决办法是通过两个变量来操作，一个用来记录停止状态，在`log`方法中，判断停止状态，如果已经停止，那么给所有生产者抛出异常，让它们知道服务已经关闭，没法再接受请求了。另一个变量用来记录当前队列中的消息数量，在停止那一刻还要把所有已有的打印请求处理完。
+
+```java
+public class LogWriterImprove {
+    private final BlockingQueue<String> msgQueue;
+    private final Thread printThread;
+    private boolean isShutdown = false;
+    private int msgCount = 0;
+
+    public LogWriterImprove(){
+        this.msgQueue = new ArrayBlockingQueue(20);
+        printThread = new PrintThread();
+    }
+
+    public void start(){
+        printThread.start();
+    }
+
+
+    public void log(String msg) throws InterruptedException {
+        synchronized (this){
+            if (isShutdown)
+                throw new IllegalStateException("Service was shutdown...");
+        }
+        msgQueue.put(msg);
+       synchronized (this){msgCount++;}
+    }
+
+    public void stop(){
+        synchronized (this){
+            isShutdown = true;
+        }
+        printThread.interrupt();
+    }
+
+    class PrintThread extends Thread{
+        private final PrintWriter writer = new PrintWriter(System.out);
+        @Override
+        public void run() {
+            super.run();
+            try{
+                while (true){
+                    try {
+                        synchronized (LogWriterImprove.this){
+                            if (isShutdown && msgCount==0)
+                                break;
+                        }
+                        writer.println(msgQueue.take());
+                        synchronized (LogWriterImprove.this){
+                            msgCount--;
+                        }
+                    }catch (InterruptedException e){
+                    }
+                }
+            }finally {
+                writer.close();
+            }
+
+        }
+    }
+}
+
+```
+同样用例我们也要修改
+```java
+public class LogWriterUse {
+    private final LogWriterImprove writer = new LogWriterImprove();
+
+    static class ConsumerThread extends Thread{
+        private final LogWriterImprove writer;
+
+        public ConsumerThread(LogWriterImprove writer){
+            this.writer = writer;
+        }
+        @Override
+        public void run() {
+            super.run();
+            while (true){
+                try {
+                    writer.log("CONSUMER "+Thread.currentThread().getName());
+                } catch (InterruptedException e) {
+                } catch (IllegalStateException e){
+                    System.out.println("CONSUME "+Thread.currentThread().getName()+" EXIT...");
+                    //跳出循环
+                    break;
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        LogWriterUse self = new LogWriterUse();
+        self.writer.start();
+        self.writer.log("MAINTHREAD");
+        for (int i=0;i<10;i++){
+            new ConsumerThread(self.writer).start();
+        }
+
+        Thread.sleep(2000);
+        self.writer.stop();
+    }
+}
+```
+
+## 毒丸对象
+我们来看另外一种关闭生产者消费者模式的方法，那就是使用毒丸对象，毒丸对象是一个特定的对象，由生产者退出时放入队列，消费者读取到一个毒丸时就代表一个生产者退出了，当所有生产者退出时任务结束，消费者自动退出。这需要生产者和消费者的数量都是已知时才能用，我们还用刚刚的示例，只不过这次我们不关闭LogWriter，而是关闭所有的生产者以达到退出程序的效果。
+
+```java
+public class LogWriterWithPoisonPill {
+    private final BlockingQueue<String> msgQueue;
+    private final Thread printThread;
+    public static final String POISONPILL = "";
+    private int consumerCount;
+
+    public LogWriterWithPoisonPill(int consumerCount){
+        this.msgQueue = new LinkedBlockingQueue();
+        printThread = new PrintThread();
+        this.consumerCount = consumerCount;
+    }
+
+    public void start(){
+        printThread.start();
+    }
+
+
+    public void log(String msg) throws InterruptedException {
+        msgQueue.put(msg);
+    }
+
+
+    class PrintThread extends Thread{
+        private final PrintWriter writer = new PrintWriter(System.out);
+        @Override
+        public void run() {
+            super.run();
+            try {
+                while (true){
+                    synchronized (LogWriterWithPoisonPill.this){
+                        if (consumerCount==0)break;
+                    }
+                    String msg = msgQueue.take();
+                    synchronized (LogWriterWithPoisonPill.this){
+                        if (msg == POISONPILL){
+                            consumerCount--;
+                            continue;
+                        }
+                    }
+                    writer.println(msg);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                writer.close();
+            }
+        }
+    }
+}
+```
+
+```java
+public class LogWriterUseWithPoisonPill {
+    private static final int CONSUMER_COUNT = 5;
+    private final LogWriterWithPoisonPill writer = new LogWriterWithPoisonPill(CONSUMER_COUNT);
+
+    static class ConsumerThread extends Thread{
+        private final LogWriterWithPoisonPill writer;
+
+        public ConsumerThread(LogWriterWithPoisonPill writer){
+            this.writer = writer;
+        }
+        @Override
+        public void run() {
+            super.run();
+            try {
+                while (true){
+                    try {
+                        writer.log("CONSUMER "+Thread.currentThread().getName());
+                    } catch (InterruptedException e) {
+                        //投放毒丸对象
+                        writer.log(LogWriterWithPoisonPill.POISONPILL);
+                        break;
+                    }
+                }
+            }catch (InterruptedException e){
+                System.out.println("EXIT");
+            }
+
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        LogWriterUseWithPoisonPill self = new LogWriterUseWithPoisonPill();
+        self.writer.start();
+        self.writer.log("MAINTHREAD");
+        List<ConsumerThread> threads = new ArrayList<>();
+        for (int i=0;i<CONSUMER_COUNT;i++){
+            ConsumerThread thread = new ConsumerThread(self.writer);
+            threads.add(thread);
+            thread.start();
+        }
+
+        Thread.sleep(2000);
+        for (int i=0;i<CONSUMER_COUNT;i++){
+            threads.get(i).interrupt();
+        }
+    }
+}
+
+```
+
+## 运行时异常
+如果在一个单线程程序中发生了一个运行时异常，那么该程序将停止，我们很容易发现程序出错了，但是在多线程程序中，比如我们有50个线程，某一个线程因为运行时异常结束了，那么将很难发现。
+
+因为运行时异常时未检测异常，它不会显式的要求你必须`try-catch`，所以它经常被我们忽略，不管何时，我们必须在线程中`catch`它并通知上层（可能是线程池）有线程因为运行时异常退出了，这时上层感知到了可能会做一些操作。
+
+## 关闭钩子
+JVM提供了一个关闭钩子机制，当JVM被关闭时它将并行调用所有注册的钩子，这能防止JVM被强行退出时线程自己结束自己，用`LogWriter`来举例子：
+```java
+public void start(){
+    Runtime.getRuntime().addShutdownHook(new Thread(){
+        @Override
+        public void run() {
+            super.run();
+            LogWriterImprove.this.stop();
+        }
+    });
+    printThread.start();
+}
+```
+## 守护线程
+守护线程不会阻碍JVM的退出，Main线程不是守护线程因为它会阻碍JVM的退出，由Main创建的所有线程默认都是非守护的，可以通过`setDaemon`为`true`设置一个线程为守护线程。
+
+```java
+public class TestDaemon {
+    public static void main(String[] args) {
+        Thread thread = new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                while (true){
+                    System.out.println("AFADF");
+                }
+            }
+        };
+        thread.setDaemon(true);
+        thread.start();
+    }
+}
+```
+
+如上代码并不会一直执行，而是随着主线程执行完毕直接退出，因为设置了守护线程。
+

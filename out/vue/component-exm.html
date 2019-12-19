@@ -1,0 +1,437 @@
+<html><head><title>Vue组件实例</title></head><body><p>看Vue官方文档，看完发现太过理论，到自己手里啥也写不出来，于是又看了本叫《Vue.js实战》的书，然后跟着写了俩组件的实例。
+
+</p>
+
+<h2>数字输入框
+</h2>
+
+<p>
+编写一个只能输入数字的输入框，并且提供加减按钮。
+
+<img src="http://nsimg.cn-bj.ufileos.com/img-1565836997751.jpg" alt="图片"/>
+
+这个需求乍一看用纯的html和js也不难实现，用vue是在是有些小题大做了，不过练习嘛。。
+
+分析需求，我们需要让我们的组件内部和引用组件的地方进行双向数据绑定，所以要提供我们自己的<code>v-model</code>。我们打算把这个组件分成两个文件来实现。
+
+- index.html  
+    html模板文件
+- input_number.js  
+    组件文件
+
+先看下html模板的代码，比较简单：
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+	&lt;head&gt;
+		&lt;meta charset=&#34;utf-8&#34;&gt;
+		&lt;title&gt;Title&lt;/title&gt;
+		&lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+		&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes&#34; /&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;div id=&#34;app&#34;&gt;
+			&lt;input-number v-model=&#34;value&#34; :max=&#34;10&#34; :min=&#34;0&#34;&gt;&lt;/input-number&gt;
+		&lt;/div&gt;
+		&lt;script src=&#34;./input_number.js&#34;&gt;&lt;/script&gt;
+		&lt;script&gt;
+			var vm = new Vue({
+				el: &#39;#app&#39;,
+				data: {
+					value: 5
+				}
+			})
+		&lt;/script&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+这个代码非常简单并且说明了我们的组件所提供的<code>props</code>参数，提供了三个<code>prop</code>，分别是用于数据绑定的<code>value</code>，用于限定输入最大值的<code>max</code>，用于限定输入最小值的<code>min</code>。
+
+因为使用<code>v-model</code>，所以我们需要在组件中发射<code>input</code>事件告诉vue根节点更新<code>value</code>。这在上一篇笔记中有提到，详见<a href="https://lilpig.site/post/vue-component#%E7%BB%84%E4%BB%B6%E4%B8%AD%E7%9A%84v-model">组件中的v-model</a>。
+
+我们再开始编写<code>input_number.js</code>：
+<code>javascript
+Vue.component(&#39;input-number&#39;,{
+	template: &#39;&lt;div class=&#34;input-number&#34;&gt;\
+				&lt;input type=&#34;text&#34; :value=&#34;currentValue&#34; @input=&#34;handleChange&#34;&gt;\
+				&lt;button @click=&#34;handleDown&#34; :disabled=&#34;currentValue &lt;= min&#34;&gt;-&lt;/button&gt;\
+				&lt;button @click=&#34;handleUp&#34; :disabled=&#34;currentValue &gt;= max&#34;&gt;+&lt;/button&gt;\
+			&lt;/div&gt;&#39;,
+	props: {
+		max: {
+			type: Number,
+			default: Infinity
+		},
+		min: {
+			type: Number,
+			default: -Infinity
+		},
+		value: {
+			type: Number,
+			default: 0
+		}
+	},
+	data: function(){
+		return {
+			currentValue: this.value
+		}
+	}
+    //...
+})
+</code>
+我们先写一部分，把模板和<code>props</code>编写了，上面的代码我们把max和min分别设置成了正负无穷，并把<code>currentValue</code>初始化为从父控件中通过<code>v-model</code>传递进来的<code>value</code>，而且我们模板中的<code>input</code>绑定了<code>value</code>为<code>currentValue</code>，这是一个单向绑定，也就是说输入框中的值改变时<code>currentValue</code>并不会直接改变，而是提供了一个<code>@input=&#34;handleChange&#34;</code>让输入时通过<code>handleChange</code>函数设置<code>currentValue</code>的值来完成双向数据绑定，这不是多此一举，因为我们做的是数字输入框，所以要在<code>handleChange</code>方法中验证输入数据的合法性。
+
+<code>handleDown</code>和<code>handleUp</code>很好理解，就是加一减一的方法，这两个按钮通过<code>:disabled</code>来实现不满足条件下按钮不允许使用。
+
+接下来看看这些方法都是怎么工作的：
+<code>javascript
+methods: {
+    updateValue: function(val){
+        if(val&gt;this.max)val=this.max;
+        if(val&lt;this.min)val=this.min;
+        this.currentValue = val;
+    },
+    handleUp: function(){
+        if(this.currentValue&lt;this.max)this.currentValue++;
+    },
+    handleDown: function(){
+        if(this.currentValue&gt;this.min)this.currentValue--;
+    },
+    handleChange: function(event){
+        var val = event.target.value.trim();
+        if((/^\d+$/).test(val)){
+            val = Number(val);
+            if(val&gt;this.max)val=this.max;
+            if(val&lt;this.min)val=this.min;
+            if(this.currentValue == val) event.target.value = val;
+            this.currentValue = val;
+        }else{
+            event.target.value = this.currentValue;
+        }
+    },
+},
+watch: {
+    currentValue: function(val){
+        this.$emit(&#39;input&#39;,val);
+    },
+    value: function(val){
+        this.updateValue(val);
+    }
+},
+mounted: function(){
+    this.updateValue(this.value);
+}
+</code>
+首先这些方法大多是通过修改<code>currentValue</code>来完成的，并且我们监听了<code>currentValue</code>的修改事件，如果修改了就发出一个<code>input</code>事件给父级，这个事件会被父级的<code>v-model</code>接收，完成父级的数据双向绑定。
+
+这些方法本身没什么好说的，都挺简单，和vue也没啥关系。就不说了。
+
+在Vue这种基于数据驱动的js库中，中尽量不要手动操作dom，有什么需求请先考虑是否能用修改数据实现。
+
+<em>PS:这个例子和原书中的有些区别，因为我觉得原书中的这个示例写的确实有很多问题，但是尊重原书，大部分还是按照原书的逻辑写的</em>
+
+
+</p>
+
+<h3>练习
+</h3>
+
+<ol>
+<li><p>输入框聚焦时按键盘的上下键完成加一减一操作。  
+只需要在模板的输入框中添加如下内容：
+<code>html
+&lt;input type=&#34;text&#34; @keyup.up=&#34;handleUp&#34; @keyup.down=&#34;handleDown&#34; :value=&#34;currentValue&#34; @input=&#34;handleChange&#34;&gt;
+</code>
+详见Vue官方文档事件篇
+
+</p></li>
+
+<li><p>增加一个控制步数的<code>prop - step</code>，用于控制加减操作一次加减的值  
+略
+</p>
+
+<h2>标签页
+</h2>
+
+<p>下面写一个标签页功能，这个挺帅的
+
+<img src="http://nsimg.cn-bj.ufileos.com/img-1565839315027.jpg" alt="图片"/>
+
+没错，只是我的css写的有点丑而已，人家书里的示例挺好看的。。。
+
+分析一下，首先我把这个分成两个组件，一个是上面的标签，一个是底下的面板。
+
+我们将会在html模板中这样使用它：
+
+<code>html
+&lt;div id=&#34;app&#34;&gt;
+&lt;tab&gt;
+    &lt;pane label=&#34;FIRST&#34; closable=&#34;true&#34;&gt;
+        FIRST PANE
+        &lt;p&gt;
+            &lt;code&gt;
+                var message = &#34;Helo,Vue&#34;;&lt;br&gt;
+                console.log(message);
+            &lt;/code&gt;
+        &lt;/p&gt;
+        &lt;p&gt;
+            &lt;code&gt;
+                &gt;&gt;&gt; Helo,Vue
+            &lt;/code&gt;
+        &lt;/p&gt;
+    &lt;/pane&gt;
+    &lt;pane label=&#34;SECOND&#34;&gt;SECOND PANE&lt;/pane&gt;
+    &lt;pane label=&#34;THRID&#34; closable=&#34;true&#34;&gt;THRID PANE&lt;/pane&gt;
+&lt;/tab&gt;
+&lt;/div&gt;
+</code>
+
+通过一个<code>tab</code>标签包裹住一些<code>pane</code>，<code>tab</code>会自动地获取每个<code>pane</code>的名字（label），然后自动生成对应的顶部标签。
+
+在<code>pane</code>标签中必须指定一个<code>label</code>作为对应顶部标签的标题，closable是一个可选项，为<code>true</code>代表这个标签页可以关闭。
+
+现在我们知道该如何使用这个组件了，那么下一步就是思考如何实现它。首先我们分成两个js，<code>tab.js</code>和<code>pane.js</code>。<code>tab.js</code>主要负责顶部的所有标签和设置当前显示的标签。因为所有的标签都在<code>tab</code>标签中，所以要提供一个插槽。
+
+因为顶部标签有多少完全依赖于tab的子元素中有多少个pane，这是不定的，所以我们要用<code>v-for</code>来循环生成。
+<code>javascript
+Vue.component(&#39;tab&#39;,{
+template: &#39;&lt;div&gt;&#39; +
+   &#39;&lt;div class=&#34;tab&#34; v-for=&#34;(nav,index) in navList&#34; @click=&#34;handleChange(index)&#34; :class=&#34;{active: currentIndex == index}&#34;&gt;{{nav.label}}&lt;/div&gt;&#39; +
+   &#39;&lt;div class=&#34;pane-container&#34;&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/div&gt;&#39;+
+   &#39;&lt;/div&gt;&#39;,
+});
+</code>
+如上是我们根据需求编写的组件模板，因为涉及到样式，所以还绑定了一些class。这其中引用了一些方法和变量，<code>navList</code>就是通过遍历子元素中的<code>pane</code>得来的标签列表，<code>currentIndex</code>用来记录当前页面的下标，<code>handleChange</code>用来更改页面。
+
+我们先搞定这个<code>navList</code>，要搞定它就要遍历子元素，除非在做这种独立组件时，否则不推荐在vue中直接获取父子元素，这会让数据流向变得难以控制。
+
+<code>javascript
+methods: {
+getTabs: function () {
+    return this.$children.filter(function (child) {
+        return child.$options.name === &#34;pane&#34;;
+    })
+},
+}
+mounted: function () {
+var _this = this;
+this.getTabs().forEach(function (pane,index) {
+    _this.navList.push({
+        name: pane.name || index,
+        label: pane.label,
+    })
+});
+this.currentIndex = 0;
+},
+data: function () {
+return {
+    navList: [],
+    currentIndex: -1
+}
+}
+</code>
+我们在挂载完毕时通过遍历<code>this.$children</code>中符合规则的元素来初始化<code>navList</code>和<code>currentIndex</code>。
+
+接下来就要考虑修改当前页面，只有pane本身可以控制自己的显示和隐藏，所以我们打算在pane中提供一个<code>show</code>变量，并且作为<code>v-show</code>的条件。
+
+<code>js
+Vue.component(&#39;pane&#39;,{
+props:[&#39;name&#39;,&#39;label&#39;,&#39;closable&#39;],
+template: &#39;&lt;div v-show=&#34;show&#34;&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/div&gt;&#39;,
+data: function () {
+    return {
+        show: false,
+    }
+}
+})
+</code>
+
+我们考虑通过修改<code>currentIndex</code>，并监听这个变量来修改当前页面：
+<code>javascript
+//...in methods
+handleChange: function (i) {
+this.currentIndex = i;
+},
+update:function (cur) {
+this.getTabs().forEach(function (pane,index) {
+    if(index == cur){
+        pane.show = true;
+    }else{
+        pane.show = false;
+    }
+})
+}
+//....
+watch:{
+currentIndex: function (val) {
+    this.update(val);
+}
+},
+</code>
+
+这样就完事了，不过我们要难度加大，再给它添加一个关闭功能。
+
+关闭功能，我们打算在pane中提供一个<code>alive</code>属性并且作为<code>v-if</code>的条件，并且在关闭时，tab会修改目标的<code>alive</code>属性。
+
+最后我们放出完整代码：
+
+index.html
+
+<code>html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+&lt;meta charset=&#34;UTF-8&#34;&gt;
+&lt;script src=&#34;https://cdn.jsdelivr.net/npm/vue/dist/vue.js&#34;&gt;&lt;/script&gt;
+&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes&#34; /&gt;
+&lt;title&gt;TAB BAR&lt;/title&gt;
+&lt;style&gt;
+    .tab{
+        display: inline-block;
+        border: #aaaaaa solid 1px;
+        padding: 10px 20px;
+        margin: 5px;
+    }
+    .active{
+        border-bottom: deepskyblue solid 2px;
+    }
+    .pane-container{
+        padding: 10px;
+        margin: 0 5px;
+        border: #aaa solid 1px;
+    }
+    code{
+        font-family: &#34;Fira Code&#34;;
+        font-size: 0.8em;
+    }
+    .close{
+        outline: none;
+        border: none;
+        background: rgba(0,0,0,0);
+        color: red;
+        font-size: 0.8em;
+    }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&#34;app&#34;&gt;
+    &lt;tab&gt;
+        &lt;pane label=&#34;FIRST&#34; closable=&#34;true&#34;&gt;
+            FIRST PANE
+            &lt;p&gt;
+                &lt;code&gt;
+                    var message = &#34;Helo,Vue&#34;;&lt;br&gt;
+                    console.log(message);
+                &lt;/code&gt;
+            &lt;/p&gt;
+            &lt;p&gt;
+                &lt;code&gt;
+                    &gt;&gt;&gt; Helo,Vue
+                &lt;/code&gt;
+            &lt;/p&gt;
+        &lt;/pane&gt;
+        &lt;pane label=&#34;SECOND&#34;&gt;
+            SECOND PANE
+            &lt;p&gt;
+                &lt;code&gt;
+                    var message = &#34;Helo,Vue&#34;;&lt;br&gt;
+                    console.log(message);
+                &lt;/code&gt;
+            &lt;/p&gt;
+            &lt;p&gt;
+                &lt;code&gt;
+                    &gt;&gt;&gt; Helo,Vue
+                &lt;/code&gt;
+            &lt;/p&gt;
+        &lt;/pane&gt;
+        &lt;pane label=&#34;THRID&#34; closable=&#34;true&#34;&gt;THRID PANE&lt;/pane&gt;
+    &lt;/tab&gt;
+&lt;/div&gt;
+
+&lt;script src=&#34;./pane.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;./tabs.js&#34;&gt;&lt;/script&gt;
+&lt;script&gt;
+    var vm = new Vue({
+        el: &#39;#app&#39;
+    });
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+tab.js
+
+<code>javascript
+Vue.component(&#39;tab&#39;,{
+template: &#39;&lt;div&gt;&#39; +
+   &#39;&lt;div class=&#34;tab&#34; v-for=&#34;(nav,index) in navList&#34; @click=&#34;handleChange(index)&#34; :class=&#34;{active: currentIndex == index}&#34;&gt;{{nav.label}} &lt;button class=&#34;close&#34; @click.stop=&#34;closePane(index)&#34; v-if=&#34;nav.closable&#34;&gt;X&lt;/button&gt;&lt;/div&gt;&#39; +
+   &#39;&lt;div class=&#34;pane-container&#34;&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/div&gt;&#39;+
+   &#39;&lt;/div&gt;&#39;,
+methods: {
+  getTabs: function () {
+     return this.$children.filter(function (child) {
+        return child.$options.name === &#34;pane&#34; &amp;&amp; child.alive;
+     })
+  },
+  handleChange: function (i) {
+     this.currentIndex = i;
+  },
+  closePane: function (i) {
+     this.navList.splice(i,1);
+     this.getTabs()[i].alive = false;
+     this.update(0);
+  },
+  update:function (cur) {
+     this.getTabs().forEach(function (pane,index) {
+        if(index == cur){
+           pane.show = true;
+        }else{
+           pane.show = false;
+        }
+     })
+  }
+},
+watch:{
+  currentIndex: function (val) {
+     this.update(val);
+  }
+},
+mounted: function () {
+  var _this = this;
+  this.getTabs().forEach(function (pane,index) {
+     _this.navList.push({
+        name: pane.name || index,
+        label: pane.label,
+        closable: pane.closable
+     })
+     console.log(_this.navList[index].closable)
+  });
+  this.currentIndex = 0;
+},
+data: function () {
+  return {
+     navList: [],
+     currentIndex: -1
+  }
+}
+});
+</code>
+
+pane.js
+
+<code>javascript
+Vue.component(&#39;pane&#39;,{
+props:[&#39;name&#39;,&#39;label&#39;,&#39;closable&#39;],
+template: &#39;&lt;div v-if=&#34;alive&#34; v-show=&#34;show&#34;&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/div&gt;&#39;,
+data: function () {
+    return {
+        show: false,
+        alive: true
+    }
+}
+})
+</code>
+</p></li>
+</ol>
+</body></html>

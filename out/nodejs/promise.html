@@ -1,0 +1,53 @@
+<html><head><title>Nodejs中的异步编程 -- Promise</title></head><body><p>Promise是一个用于链式编写异步代码的规范。嘶。我感觉没有<code>async</code>好使，不过可能各有各的好处吧！VSCode API整个都使用了Promise规范。
+
+Promise从语义上看就是一个承诺，承诺有两种状态，一个是兑现了(resolve 解决)、一个是没有兑现(reject 拒绝)，Promise通过这两种状态控制异步操作。
+
+一个链式操作大概是这样的：  
+<code>task1().then(task2).then(task3).catch(err=&gt;{处理错误})</code>
+
+其中每一个task都是一个方法，这个方法返回一个Proimse，方法中如果处理完成调用<code>resolve</code>，然后<code>then</code>也就是下一个任务函数被调用，如果处理出错调用<code>reject</code>，整个链条中断，<code>catch</code>被调用。
+
+
+比如：
+<code>javascript
+const fs = require(&#39;fs&#39;);
+
+function getFile(path){
+    return new Promise(function(resolve,reject){
+        fs.readFile(path,function(err,data){
+            if(err)
+                reject(err);
+            else
+                resolve(data);
+        })
+    })
+}
+
+getFile(&#39;./file1&#39;).then(data=&gt;{
+    console.log(&#39;file1 =&gt; \n&#39;+data);
+    return getFile(&#39;./file2.js&#39;);
+}).then(data=&gt;{
+    console.log(&#39;file2 =&gt; \n&#39;+data);
+}).catch(err=&gt;{
+    console.log(&#39;get an err =&gt; &#39;+err)
+})
+</code>
+
+上面代码提供了一个公共方法<code>getFile</code>返回promise对象，下面就可以通过<code>then-catch</code>进行链式调用了。它们是同步执行的。
+
+除了<code>catch</code>还可以接<code>finally</code>，不管结果怎样都会被执行。
+
+
+异步执行的话，可以使用<code>Promise.all</code>方法，这是一个静态方法。
+
+<code>javascript
+Promise.all([promise1,promise2,promise3]).then(data=&gt;{
+    console.log(data);
+}).catch(err){
+    console.log(err);
+}
+</code>
+
+有任何一个promise返回了reject，都会回调<code>catch</code>，如果全部执行成功，<code>then</code>会被执行，并且所有的任务的结果会被封装成数组传递进去。
+</p>
+</body></html>
