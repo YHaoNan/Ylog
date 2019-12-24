@@ -1,4 +1,6 @@
-<html><head><title>VIM中被我忽略的技巧(移动篇)</title></head><body><p>已经使用Vim有几个月了，现在我已经到了没有VIM就不会打字的处境了。</p>
+<html><head><title>VIM中被我忽略的技巧(移动篇)</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>VIM中被我忽略的技巧(移动篇)</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-11-12 11:50:27</span><span id="categorie">Vim</span></div><p>已经使用Vim有几个月了，现在我已经到了没有VIM就不会打字的处境了。</p>
 
 <p>不过VIM中有很多我曾经忽略的快捷键，其实这些快捷键挺常用的，就是不知道我当时怎么就不会用。导致在一些输入场景下很蛋疼。</p>
 
@@ -8,23 +10,21 @@
 
 <p>当设置了<code>wrap</code>的时候，如果一行放不下就会折行显示，但这个折行在VIM中并不算一个实际行，所以当你用<code>j k</code>等动作按键移动时就会直接移动到很远的位置。VIM提供了屏幕行的概念，将动作命令前面加上<code>g</code>就是对屏幕行操作。</p>
 
-<p><code>gj</code> – 向上移动一个屏幕行<br/>
-<code>gk</code> – 向下移动一个屏幕行</p>
+<p><code>gj</code> -- 向上移动一个屏幕行<br/>
+<code>gk</code> -- 向下移动一个屏幕行</p>
 
 <h2>e和ge</h2>
 
 <p>总用w和b，忽略了e和ge。有时候想在单词尾部追加，这就很蛋疼了。</p>
 
-<p><code>e</code> – 跳转到当前/下一个单词尾部。<br/>
-<code>ge</code> – 跳转到上一个单词尾部。</p>
+<p><code>e</code> -- 跳转到当前/下一个单词尾部。<br/>
+<code>ge</code> -- 跳转到上一个单词尾部。</p>
 
 <h2>单词和字串</h2>
 
 <p>字串只以空格分割，单词可能以标点分割。</p>
-
-<pre><code>we&#39;re niubility.
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822">we&#39;re niubility.
+</pre>
 <p>对于上一句，会被分成两个字串但会被分成五个单词。</p>
 
 <p>大写的单词操作命令就是针对字串操作。</p>
@@ -34,10 +34,8 @@
 <p>重度依赖<code>f</code>查找命令，这是个在单行快速跳转的好办法。因为我的vim安装了一个<code>f</code>按键的增强插件，如果一行中有多个搜索结果，再次按f就可以跳转到下一个结果位置。</p>
 
 <p>但我忽略了vim还有个和f配套的按键<code>;</code>，他就是重复上次的f命令，寻找下一个匹配的字母。</p>
-
-<pre><code>Find the first occurrence of {char} and move to it.
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822">Find the first occurrence of {char} and move to it.
+</pre>
 <p>比如从上面这行找<code>occurrence</code>这个单词中的最后一个c。<code>fc;;</code>貌似是个好办法。</p>
 
 <h2>,</h2>
@@ -49,10 +47,8 @@
 <p><code>t</code>和<code>f</code>功能相同，都是在一行内查找指定字符。但是<code>f</code>是查找到那个字符，<code>t</code>是查找到前一个字符。</p>
 
 <p>比如：</p>
-
-<pre><code>I&#39;ve been expecting you, Mister Bond.
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822">I&#39;ve been expecting you, Mister Bond.
+</pre>
 <p>我们想把逗号后面的半句删除。</p>
 
 <p><code>f,dt.</code></p>
@@ -66,15 +62,11 @@
 <p><code>/xx&lt;CR&gt;</code>查找。<code>n</code>向下一个，<code>N</code>向上一个。</p>
 
 <p><code>d/xx</code>会删除查找到的单词之前的所有内容。</p>
-
-<pre><code>This phrase takes time but eventually gets to the point.
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822">This phrase takes time but eventually gets to the point.
+</pre>
 <p>从行首执行<code>d/ge</code>会删除到<code>ge</code>之前的所有字符，结果是：</p>
-
-<pre><code>gets to the point.
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822">gets to the point.
+</pre>
 <h2>文本对象</h2>
 
 <p>如果在圆括号内部，输入<code>vib</code>试试会发生什么？</p>
@@ -84,8 +76,7 @@
 <p>拆分这个命令，<code>v</code>是可视动作，<code>ib</code>和<code>ab</code>是操作对象，<code>b</code>即小括号，<code>i</code>可以看做<code>inside</code>，即只选中小括号内的文本，<code>a</code>看做<code>around</code>，即选中文本外还要选中包裹它的小括号。</p>
 
 <p>VIM提供了很多文本对象。</p>
-
-<pre><code>b或) -- 小括号
+<pre style="color:#f8f8f2;background-color:#272822">b或) -- 小括号
 B或} -- 大括号
 ] -- 中括号
 &gt; -- 尖括号
@@ -93,18 +84,15 @@ B或} -- 大括号
 &#34; -- 双引号
 ` -- 反引号
 t -- xml标签
-</code></pre>
-
+</pre>
 <p>可以使用<code>动作+a/i+文本对象</code>的方式操作它们，比如<code>dit</code>删除所在xml标签里所有内容。</p>
 
 <h2>文本块对象</h2>
-
-<pre><code>w -- 当前单词
+<pre style="color:#f8f8f2;background-color:#272822">w -- 当前单词
 W -- 当前字串
 s -- 当前句子
 p -- 当前段落
-</code></pre>
-
+</pre>
 <p>当对单词字串和句子应用a选取时，比如<code>daw</code>，会删除一个单词外加一个空格。</p>
 
 <p>对段落时则是空行。</p>
@@ -129,8 +117,7 @@ p -- 当前段落
 <p><code>mm</code>允许你设置标记，使用`m就可以跳转到刚刚设置的标记处。</p>
 
 <h2>括号匹配</h2>
-
-<pre><code>`%`允许我们在匹配的括号间跳转。
+<pre style="color:#f8f8f2;background-color:#272822">`%`允许我们在匹配的括号间跳转。
 
 cities = %w{London Berlin New\ York}
 
@@ -141,5 +128,6 @@ cities = %w{London Berlin New\ York}
 首先用`dt{`而不是`df{`的原因是如果我们删除了`{`，我们就无法快速跳转到后面与它匹配的大括号了
 
 然后就是%跳转到后面的大括号，用r]替换成中括号，再用\`\`跳转到上一次跳转动作的位置。也就是前面的大括号，再用`r[`替换它。
-</code></pre>
-</body></html>
+</pre><div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

@@ -1,4 +1,6 @@
-<html><head><title>Leetcode - Add Two Number</title></head><body><h3>描述</h3>
+<html><head><title>Leetcode - Add Two Number</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>Leetcode - Add Two Number</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-05-21 07:36:27</span><span id="categorie">leetcode</span></div><h3>描述</h3>
 
 <p>题目：<br/>
 &gt;You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order and each of their nodes contain a single digit. Add the two numbers and return it as a linked list.<br/>
@@ -7,31 +9,26 @@ You may assume the two numbers do not contain any leading zero, except the numbe
 <p>难度：Medium</p>
 
 <p>示例：</p>
-
-<pre><code>Input: (2 -&gt; 4 -&gt; 3) + (5 -&gt; 6 -&gt; 4)
+<pre style="color:#f8f8f2;background-color:#272822">Input: (2 -&gt; 4 -&gt; 3) + (5 -&gt; 6 -&gt; 4)
 Output: 7 -&gt; 0 -&gt; 8
 Explanation: 342 + 465 = 807.
-</code></pre>
-
+</pre>
 <p>链表的JavaAPI</p>
+<pre style="color:#f8f8f2;background-color:#272822">链表的Java API<span style="color:#960050;background-color:#1e0010">：</span>
 
-<pre><code class="language-java">链表的Java API：
-
- public class ListNode {
-    int val;
-    ListNode next;
-    ListNode(int x) { val = x; }
- }
- */
-</code></pre>
-
+ <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ListNode</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">int</span> val<span style="color:#f92672">;</span>
+    ListNode next<span style="color:#f92672">;</span>
+    ListNode<span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> x<span style="color:#f92672">)</span> <span style="color:#f92672">{</span> val <span style="color:#f92672">=</span> x<span style="color:#f92672">;</span> <span style="color:#f92672">}</span>
+ <span style="color:#f92672">}</span>
+ <span style="color:#f92672">*</span><span style="color:#f92672">/</span>
+</pre>
 <h3>想法</h3>
 
 <p>由于这个步骤有些多，所以每一步用伪代码实现一下。</p>
 
 <p>首先不考虑进位，不考虑两个链表长度不同，循环读出链表的值，并且相加成为一个新的链表。</p>
-
-<pre><code>f(l1,l2)
+<pre style="color:#f8f8f2;background-color:#272822">f(l1,l2)
     r = null
     while(l1!=null)
         plus = l1.val + l2.val
@@ -42,13 +39,11 @@ Explanation: 342 + 465 = 807.
             r = result.next
         l1 = l1.next
         l2 = l2.next
-</code></pre>
-
+</pre>
 <p>我们实现了一个基本模型，现在考虑下进位问题。因为每位肯定是不可能超过10的正整数(包括0)，那么就算9和9相加都不到20，所以，进的位肯定是1或者0，而不可能是2。</p>
 
 <p>所以我们并不用一个数来存储进位，直接用一个布尔变量记录上一次相加是否需要进位即可。</p>
-
-<pre><code>...
+<pre style="color:#f8f8f2;background-color:#272822">...
     while(l1!=null)
         plus = l1.val + l2.val + (n?1:0) # 这里加上了一个判断，如果需要进位就加1
         ...
@@ -63,13 +58,11 @@ Explanation: 342 + 465 = 807.
 
         l1 = l1.next
         l2 = l2.next
-</code></pre>
-
+</pre>
 <p>进位的问题解决了，我们再考虑下链表长度不同的问题。我们现在依靠l1的长度做这件事，也就是说如果l2比l1长，那么后面的数不会加到，如果比l1短，会引起异常(Null Pointer)。</p>
 
 <p>那么我们把循环条件放松一些，如果l1和l2中有一个不等于null就行。也就是只要两个中有一个还有要加的数就让它继续循环。不过我们还需要多加一些判断的代码保证不会出异常。</p>
-
-<pre><code>...
+<pre style="color:#f8f8f2;background-color:#272822">...
     while(l1!=null || l2!=null)
         plus = (l1!=null?l1.val:0) + (l2!=null?l2.val:0) + (n?1:0)
         ...
@@ -84,73 +77,66 @@ Explanation: 342 + 465 = 807.
 
         l1 = (l1!=null?l1.next:null)
         l2 = (l2!=null?l2.next:null)
-</code></pre>
-
+</pre>
 <p>还有一个终极问题就是，如果最后一位需要进位怎么办？比如：</p>
-
-<pre><code>输入[5 -&gt; 2 -&gt; 1] [1 -&gt; 2 -&gt; 9]
+<pre style="color:#f8f8f2;background-color:#272822">输入[5 -&gt; 2 -&gt; 1] [1 -&gt; 2 -&gt; 9]
 
 输出[6 -&gt; 4 -&gt; 0 -&gt; 1]
-</code></pre>
-
+</pre>
 <p>所以还要在后面判断一下。</p>
-
-<pre><code>...
+<pre style="color:#f8f8f2;background-color:#272822">...
         l2 = (l2!=null?l2.next:null)
 
 if(n)
     r.next = ListNode(1)
-</code></pre>
-
+</pre>
 <p>这就万无一失了。</p>
 
 <h3>实现</h3>
 
 <p>Java</p>
-
-<pre><code class="language-Java">/**
-* 时间复杂度 O(n)
-* 空间复杂度 O(n)
-*
-*/
-class Solution {
-    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
-        boolean isEqualsBiggerThanTen = false;
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e">/**
+</span><span style="color:#75715e">* 时间复杂度 O(n)
+</span><span style="color:#75715e">* 空间复杂度 O(n)
+</span><span style="color:#75715e">*
+</span><span style="color:#75715e">*/</span>
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Solution</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">public</span> ListNode <span style="color:#a6e22e">addTwoNumbers</span><span style="color:#f92672">(</span>ListNode l1<span style="color:#f92672">,</span> ListNode l2<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">boolean</span> isEqualsBiggerThanTen <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
         
-        ListNode result = null;
-        ListNode head = null;
+        ListNode result <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        ListNode head <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
         
-        while(l1!=null || l2!=null){
-            int plus = (l1!=null?l1.val:0) + (l2!=null?l2.val:0) + (isEqualsBiggerThanTen?1:0);
+        <span style="color:#66d9ef">while</span><span style="color:#f92672">(</span>l1<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span> <span style="color:#f92672">|</span><span style="color:#f92672">|</span> l2<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> plus <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>l1<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">?</span>l1<span style="color:#f92672">.</span><span style="color:#a6e22e">val</span><span style="color:#f92672">:</span>0<span style="color:#f92672">)</span> <span style="color:#f92672">+</span> <span style="color:#f92672">(</span>l2<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">?</span>l2<span style="color:#f92672">.</span><span style="color:#a6e22e">val</span><span style="color:#f92672">:</span>0<span style="color:#f92672">)</span> <span style="color:#f92672">+</span> <span style="color:#f92672">(</span>isEqualsBiggerThanTen<span style="color:#f92672">?</span>1<span style="color:#f92672">:</span>0<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
             
-            if(result == null){
-                result = new ListNode(plus);
-                head = result;
-            }else{
-                result.next = new ListNode(plus);
-                result = result.next;
-            }
+            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>result <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+                result <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ListNode<span style="color:#f92672">(</span>plus<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                head <span style="color:#f92672">=</span> result<span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span><span style="color:#66d9ef">else</span><span style="color:#f92672">{</span>
+                result<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ListNode<span style="color:#f92672">(</span>plus<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                result <span style="color:#f92672">=</span> result<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
             
-            if(result.val &gt; 9){
-                result.val %= 10;
-                isEqualsBiggerThanTen = true;
-            }else
-                isEqualsBiggerThanTen = false;
-            l1 = (l1!=null?l1.next:null);
-            l2 = (l2!=null?l2.next:null);
-        }
+            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>result<span style="color:#f92672">.</span><span style="color:#a6e22e">val</span> <span style="color:#f92672">&gt;</span> 9<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+                result<span style="color:#f92672">.</span><span style="color:#a6e22e">val</span> <span style="color:#f92672">%</span><span style="color:#f92672">=</span> 10<span style="color:#f92672">;</span>
+                isEqualsBiggerThanTen <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span><span style="color:#66d9ef">else</span>
+                isEqualsBiggerThanTen <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+            l1 <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>l1<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">?</span>l1<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">:</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            l2 <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>l2<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">?</span>l2<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">:</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
         
-        if(isEqualsBiggerThanTen){
-            result.next = new ListNode(1);
-        }
-        return head;
-    }
-}
-</code></pre>
-
+        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>isEqualsBiggerThanTen<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            result<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ListNode<span style="color:#f92672">(</span>1<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> head<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</pre>
 <p>结果</p>
-
-<pre><code>Runtime: 2 ms, faster than 94.88% of Java online submissions for Add Two Numbers.
+<pre style="color:#f8f8f2;background-color:#272822">Runtime: 2 ms, faster than 94.88% of Java online submissions for Add Two Numbers.
 Memory Usage: 42.8 MB, less than 88.82% of Java online submissions for Add Two Numbers.
-</code></pre>
-</body></html>
+</pre><div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

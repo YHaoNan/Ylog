@@ -1,4 +1,6 @@
-<html><head><title>优先队列</title></head><body><p>优先队列是一种数据结构，不同于队列的先进先出，优先队列是最大的元素先出。这种数据结构应用场景很广泛，在很多有优先级需求的场景可以用到。</p>
+<html><head><title>优先队列</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>优先队列</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-06-27 13:41:24</span><span id="categorie">算法和数据结构</span></div><p>优先队列是一种数据结构，不同于队列的先进先出，优先队列是最大的元素先出。这种数据结构应用场景很广泛，在很多有优先级需求的场景可以用到。</p>
 
 <p>使用二叉堆或者树可以很好的实现优先队列并把插入和取出操作的时间复杂度限制在对数级别。</p>
 
@@ -7,81 +9,81 @@
 <p>插入操作直接把元素插入到二叉堆最后一个位置，然后再用<code>swim</code>方法让它向上游，如果父节点小于它那么它将和父节点换位置，如果父节点大于它那么该处则是它的正确位置。</p>
 
 <p>对于删除元素，因为优先队列删除的永远是最大的，也就是二叉堆的根，那么我们可以把二叉堆的最后一个元素放到首位，之后用<code>sink</code>方法让它下沉，如果子节点大于它那么他将和子节点交换位置。</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#f92672">import</span> java.util.Scanner<span style="color:#f92672">;</span>
 
-<pre><code class="language-java">import java.util.Scanner;
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MaxPQ</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">[</span><span style="color:#f92672">]</span> pq<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> length<span style="color:#f92672">;</span>
 
-public class MaxPQ {
-    private int[] pq;
-    private int length;
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">MaxPQ</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> max<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        pq <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">[</span>max<span style="color:#f92672">+</span>1<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        length <span style="color:#f92672">=</span> 1<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public MaxPQ(int max){
-        pq = new int[max+1];
-        length = 1;
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">max</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> pq<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public int max(){
-        return pq[1];
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">delMax</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isEmpty<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Empty&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span>1<span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">int</span> temp <span style="color:#f92672">=</span> pq<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        pq<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span><span style="color:#f92672">=</span>pq<span style="color:#f92672">[</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span>length<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        pq<span style="color:#f92672">[</span>length<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+        sink<span style="color:#f92672">(</span>1<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> temp<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public int delMax(){
-        if (isEmpty()) {System.out.println(&#34;Empty&#34;);return -1;}
-        int temp = pq[1];
-        pq[1]=pq[--length];
-        pq[length] = 0;
-        sink(1);
-        return temp;
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">insert</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> a<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isFull<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span> System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Full&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#66d9ef">return</span><span style="color:#f92672">;</span> <span style="color:#f92672">}</span>
+        pq<span style="color:#f92672">[</span>length<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> a<span style="color:#f92672">;</span>
+        swim<span style="color:#f92672">(</span>length<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public void insert(int a){
-        if (isFull()){ System.out.println(&#34;Full&#34;);return; }
-        pq[length] = a;
-        swim(length++);
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isFull</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> length<span style="color:#f92672">=</span><span style="color:#f92672">=</span>pq<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> length<span style="color:#f92672">=</span><span style="color:#f92672">=</span>1<span style="color:#f92672">;</span><span style="color:#f92672">}</span>
 
-    public boolean isFull(){return length==pq.length;}
-    public boolean isEmpty(){return length==1;}
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">size</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> length<span style="color:#f92672">-</span>1<span style="color:#f92672">;</span><span style="color:#f92672">}</span>
 
-    public int size(){return length-1;}
+    <span style="color:#75715e">//下沉
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sink</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>2<span style="color:#f92672">*</span>i<span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span>length<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> j <span style="color:#f92672">=</span> 2<span style="color:#f92672">*</span>i<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>pq<span style="color:#f92672">[</span>j<span style="color:#f92672">]</span><span style="color:#f92672">&lt;</span>pq<span style="color:#f92672">[</span>j<span style="color:#f92672">+</span>1<span style="color:#f92672">]</span><span style="color:#f92672">)</span>j<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>pq<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">&lt;</span>pq<span style="color:#f92672">[</span>j<span style="color:#f92672">]</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">int</span> t<span style="color:#f92672">=</span>pq<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">;</span>pq<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">=</span>pq<span style="color:#f92672">[</span>j<span style="color:#f92672">]</span><span style="color:#f92672">;</span>pq<span style="color:#f92672">[</span>j<span style="color:#f92672">]</span><span style="color:#f92672">=</span>t<span style="color:#f92672">;</span><span style="color:#f92672">}</span><span style="color:#66d9ef">else</span> <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+            i<span style="color:#f92672">=</span>j<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#75715e">//上浮
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">swim</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>i<span style="color:#f92672">&gt;</span>1 <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> pq<span style="color:#f92672">[</span>i<span style="color:#f92672">/</span>2<span style="color:#f92672">]</span><span style="color:#f92672">&lt;</span>pq<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> tmp <span style="color:#f92672">=</span> pq<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">;</span>pq<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">=</span>pq<span style="color:#f92672">[</span>i<span style="color:#f92672">/</span>2<span style="color:#f92672">]</span><span style="color:#f92672">;</span>pq<span style="color:#f92672">[</span>i<span style="color:#f92672">/</span>2<span style="color:#f92672">]</span><span style="color:#f92672">=</span>tmp<span style="color:#f92672">;</span>
+            i<span style="color:#f92672">/</span><span style="color:#f92672">=</span>2<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
 
-    //下沉
-    private void sink(int i){
-        while (2*i&lt;=length){
-            int j = 2*i;
-            if (pq[j]&lt;pq[j+1])j++;
-            if (pq[i]&lt;pq[j]){int t=pq[i];pq[i]=pq[j];pq[j]=t;}else break;
-            i=j;
-        }
-    }
-    //上浮
-    private void swim(int i){
-        while (i&gt;1 &amp;&amp; pq[i/2]&lt;pq[i]){
-            int tmp = pq[i];pq[i]=pq[i/2];pq[i/2]=tmp;
-            i/=2;
-        }
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span><span style="color:#f92672">(</span>String<span style="color:#f92672">[</span><span style="color:#f92672">]</span> args<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        MaxPQ maxPQ <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> MaxPQ<span style="color:#f92672">(</span>100<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        Scanner scanner <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Scanner<span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">in</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">switch</span> <span style="color:#f92672">(</span>scanner<span style="color:#f92672">.</span><span style="color:#a6e22e">nextLine</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;i&#34;</span><span style="color:#f92672">:</span>
+                    maxPQ<span style="color:#f92672">.</span><span style="color:#a6e22e">insert</span><span style="color:#f92672">(</span>scanner<span style="color:#f92672">.</span><span style="color:#a6e22e">nextInt</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;d&#34;</span><span style="color:#f92672">:</span>
+                    System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>maxPQ<span style="color:#f92672">.</span><span style="color:#a6e22e">delMax</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;m&#34;</span><span style="color:#f92672">:</span>
+                    System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>maxPQ<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;l&#34;</span><span style="color:#f92672">:</span>
+                    System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>maxPQ<span style="color:#f92672">.</span><span style="color:#a6e22e">size</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
 
-    public static void main(String[] args) {
-        MaxPQ maxPQ = new MaxPQ(100);
-        Scanner scanner = new Scanner(System.in);
-        while (true){
-            switch (scanner.nextLine()){
-                case &#34;i&#34;:
-                    maxPQ.insert(scanner.nextInt());
-                    break;
-                case &#34;d&#34;:
-                    System.out.println(maxPQ.delMax());
-                    break;
-                case &#34;m&#34;:
-                    System.out.println(maxPQ.max());
-                    break;
-                case &#34;l&#34;:
-                    System.out.println(maxPQ.size());
-                    break;
-            }
-        }
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
 
-    }
-}
-
-</code></pre>
-</body></html>
+</pre><div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

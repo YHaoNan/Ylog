@@ -32,6 +32,7 @@ Ylog的最后两个插件是主题插件和静态资源插件，它们总被最�
 ├── config.ymal
 ├── _out
 ├── posts
+├── pages
 └── themes
 ```
 
@@ -41,7 +42,58 @@ Ylog的最后两个插件是主题插件和静态资源插件，它们总被最�
 
 `posts`是用户编写的markdown文件。
 
+`pages`是用户创建的页面文件。
+
 `themes`是项目依赖的主题。之所以叫`themes`是因为这点上Ylog和Hexo的做法是一样的，可以在themes中存放多个主题，然后在`config.yaml`中切换。
+
+## 约束
+posts文件夹中的任意深度的文件夹都会被编译到out中，并且只剩下最外层的文件夹。这个最外层的文件夹作为里面博客文件的分类。
+
+```
+posts
+    Java
+        Spring
+            spring-note01.md
+        reflect.md
+```
+
+比如如上文件夹结构会编译成：
+```
+out
+    Java
+        reflect.html
+    Spring
+        spring-note01.html
+```
+
+pages中的任意深度的文件夹都会直接编译到`out`文件夹里。如：
+```
+pages
+    test1
+        testpage1.md
+```
+会被编译成
+```
+out
+    testpage1.html
+```
+
+所有的markdown文件都必须有一份文件头，该文件头和Hexo一样，只是多了一些约束。
+```
+---
+title: 标题
+date: 创建时间
+categories: 分类
+---
+```
+这里要说一下，上面三个是必须的字段，而且必须Markdown文件第一行开始就是文件头，否则会报错。
+
+使用`Ylog new post 分类/标题`会自动生成文件并写入文件头。
+
+插件可以使用文件头与用户交互。
+
+categories文件头如果按照Ylog的文件夹分类标准的话其实可以不用填，但是我之前写进去了，然后也懒得改了，请保持该字段和所在文件夹一致。
+
 
 ## 命令行
 ```

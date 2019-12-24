@@ -1,4 +1,6 @@
-<html><head><title>Leetcode - Two Sum</title></head><body><h3>描述</h3>
+<html><head><title>Leetcode - Two Sum</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>Leetcode - Two Sum</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-05-20 18:24:27</span><span id="categorie">leetcode</span></div><h3>描述</h3>
 
 <p>题目：<br/>
 &gt;Given an array of integers, return indices of the two numbers such that they add up to a specific target.<br/>
@@ -7,13 +9,11 @@ You may assume that each input would have exactly one solution, and you may not 
 <p>难度：Easy</p>
 
 <p>示例：</p>
-
-<pre><code>Given nums = [2, 7, 11, 15], target = 9,
+<pre style="color:#f8f8f2;background-color:#272822">Given nums = [2, 7, 11, 15], target = 9,
 
 Because nums[0] + nums[1] = 2 + 7 = 9,
 return [0, 1].
-</code></pre>
-
+</pre>
 <h3>想法</h3>
 
 <p>如果按照笨方法做，那么每一个数得循环一次，最起码是指数级别的时间复杂度。我想用常数级别的线性时间内完成，于是想到hashmap。</p>
@@ -23,43 +23,39 @@ return [0, 1].
 <h3>实现</h3>
 
 <p>Java</p>
-
-<pre><code class="language-java">class Solution {
-    public int[] twoSum(int[] nums, int target) {
-        Map&lt;Integer,Integer&gt; bucket = new HashMap();
-        for(int i=0;i&lt;nums.length;i++){
-            int lackNum = target-nums[i];
-            if(bucket.get(lackNum)!=null)
-                return new int[]{bucket.get(lackNum),i};
-            else
-                bucket.put(nums[i],i);
-        }
-        return null;
-    }
-}
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Solution</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">[</span><span style="color:#f92672">]</span> <span style="color:#a6e22e">twoSum</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span><span style="color:#f92672">[</span><span style="color:#f92672">]</span> nums<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> target<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        Map<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">,</span>Integer<span style="color:#f92672">&gt;</span> bucket <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> HashMap<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span>0<span style="color:#f92672">;</span>i<span style="color:#f92672">&lt;</span>nums<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">;</span>i<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> lackNum <span style="color:#f92672">=</span> target<span style="color:#f92672">-</span>nums<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>bucket<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>lackNum<span style="color:#f92672">)</span><span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">{</span>bucket<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>lackNum<span style="color:#f92672">)</span><span style="color:#f92672">,</span>i<span style="color:#f92672">}</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">else</span>
+                bucket<span style="color:#f92672">.</span><span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>nums<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">,</span>i<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</pre>
 <p>Python3</p>
-
-<pre><code class="language-python">class Solution:
-    def twoSum(self, nums: List[int], target: int) -&gt; List[int]:
-        bucket = {}
-        for i,num in enumerate(nums):
-            try:
-                index = bucket[target-num]
-                return [index,i]
-            except:
-                pass
-            finally:
-                bucket[num]=i
-</code></pre>
-
-<pre><code>Java版本运行结果：
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Solution</span>:
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">twoSum</span>(self, nums: List[int], target: int) <span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span> List[int]:
+        bucket <span style="color:#f92672">=</span> {}
+        <span style="color:#66d9ef">for</span> i,num <span style="color:#f92672">in</span> enumerate(nums):
+            <span style="color:#66d9ef">try</span>:
+                index <span style="color:#f92672">=</span> bucket[target<span style="color:#f92672">-</span>num]
+                <span style="color:#66d9ef">return</span> [index,i]
+            <span style="color:#66d9ef">except</span>:
+                <span style="color:#66d9ef">pass</span>
+            <span style="color:#66d9ef">finally</span>:
+                bucket[num]<span style="color:#f92672">=</span>i
+</pre><pre style="color:#f8f8f2;background-color:#272822">Java版本运行结果：
 Runtime: 2 ms, faster than 99.33% of Java online submissions for Two Sum.
 Memory Usage: 37.2 MB, less than 98.48% of Java online submissions for Two Sum.
 
 Python版本运行结果：
 Runtime: 28 ms, faster than 99.92% of Python3 online submissions for Two Sum.
 Memory Usage: 14.4 MB, less than 31.65% of Python3 online submissions for Two Sum.
-</code></pre>
-</body></html>
+</pre><div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

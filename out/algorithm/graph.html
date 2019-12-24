@@ -1,4 +1,6 @@
-<html><head><title>图简单实现以及深度优先搜索和广度优先搜索</title></head><body><h2>写在最前</h2>
+<html><head><title>图简单实现以及深度优先搜索和广度优先搜索</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>图简单实现以及深度优先搜索和广度优先搜索</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-07-07 17:01:19</span><span id="categorie">[数据结构 算法]</span></div><h2>写在最前</h2>
 
 <p>博客最近都没怎么更新，天天练车，也没啥时间打理。但是我一直都在学习吼～～</p>
 
@@ -21,20 +23,42 @@
 4. 添加任何一条边都会产生一个环
 5. 任意一对顶点之间只存在一条简单路径</p>
 
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Age</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Bob</td>
+<td>27</td>
+</tr>
+
+<tr>
+<td>Alice</td>
+<td>23</td>
+</tr>
+</tbody>
+</table>
+
 <h2>无向图</h2>
 
-<p>我们先抽象一个无向图的API：
-public class|Graph|<span></span>
--:|:-|:-
-<span></span>|Graph(int V)|创建一个含有V个顶点但不含有边的图
-int|V()|顶点数
-int|E()|边数
-void|addEdge(int v,int w)|添加一条边，连接v-w
-Iterable&lt;Integer&gt;|adj(int v)|和v相邻的所有顶点
-String|toString()|对象的字符串表示
-int|<em>degree(Graph G,int v)</em>|计算v的度数
-int|<em>maxDegree(Graph G)</em>|计算图中顶点的最大度数
-double|<em>avgDegree(Graph G)</em>|计算图中顶点的平均度数
+<p>我们先抽象一个无向图的API：</p>
+
+<p>public class|Graph|af<br/>
+-:|:-|:-<br/>
+aa|Graph(int V)|创建一个含有V个顶点但不含有边的图<br/>
+int|V()|顶点数<br/>
+int|E()|边数<br/>
+void|addEdge(int v,int w)|添加一条边，连接v-w<br/>
+Iterable&lt;Integer&gt;|adj(int v)|和v相邻的所有顶点<br/>
+String|toString()|对象的字符串表示<br/>
+int|<em>degree(Graph G,int v)</em>|计算v的度数<br/>
+int|<em>maxDegree(Graph G)</em>|计算图中顶点的最大度数<br/>
+double|<em>avgDegree(Graph G)</em>|计算图中顶点的平均度数<br/>
 int|<em>numberOfSelfLoops(Graph G)</em>|计算自环个数</p>
 
 <p>下面有几个静态方法，我们会在以后的所有图API中用到。</p>
@@ -46,125 +70,123 @@ int|<em>numberOfSelfLoops(Graph G)</em>|计算自环个数</p>
 <p>每当调用<code>addEdge</code>去添加一条边的时候，我们需要把<code>v</code>放到<code>w</code>的邻接列表里，把<code>w</code>放到<code>v</code>的邻接列表里。</p>
 
 <p>我们得出了这样一个图模型(我把V和E方法省略了，直接公开属性)：</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e">/**
+</span><span style="color:#75715e"> * @Description: description...
+</span><span style="color:#75715e"> * @author: LILPIG
+</span><span style="color:#75715e"> * @date 19-7-7
+</span><span style="color:#75715e"> * God bless my code...
+</span><span style="color:#75715e"> */</span>
+<span style="color:#f92672">package</span> graph<span style="color:#f92672">;</span>
 
-<pre><code class="language-java">/**
- * @Description: description...
- * @author: LILPIG
- * @date 19-7-7
- * God bless my code...
- */
-package graph;
+<span style="color:#f92672">import</span> java.util.LinkedList<span style="color:#f92672">;</span>
 
-import java.util.LinkedList;
-
-public class Graph {
-
-
-    public int E;
-    public final int V;
-    private final LinkedList&lt;Integer&gt; adj[];
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Graph</span> <span style="color:#f92672">{</span>
 
 
-    public Graph(int V){
-        this.V = V;
-        this.adj = (LinkedList&lt;Integer&gt;[]) new LinkedList[V];
-        for (int i=0;i&lt;adj.length;i++){
-            this.adj[i] = new LinkedList&lt;&gt;();
-        }
-    }
-
-    public void addEdge(int v,int w){
-        adj[v].add(w);
-        adj[w].add(v);
-        E++;
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> E<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> V<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> LinkedList<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> adj<span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
 
 
-    /**
-     * 和某个节点相邻的节点
-     * @param v
-     * @return
-     */
-    public Iterable&lt;Integer&gt; adj(int v){
-        return adj[v];
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">Graph</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> V<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">V</span> <span style="color:#f92672">=</span> V<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">adj</span> <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>LinkedList<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span><span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">new</span> LinkedList<span style="color:#f92672">[</span>V<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span>0<span style="color:#f92672">;</span>i<span style="color:#f92672">&lt;</span>adj<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">;</span>i<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">adj</span><span style="color:#f92672">[</span>i<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> LinkedList<span style="color:#f92672">&lt;</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
 
-    /**
-     * 计算图的度数
-     * @param G
-     * @param v
-     * @return
-     */
-    public static int degree(Graph G,int v){
-        int degree = 0;
-        for (int w:G.adj(v))degree++;
-        return degree;
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">addEdge</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">,</span><span style="color:#66d9ef">int</span> w<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        adj<span style="color:#f92672">[</span>v<span style="color:#f92672">]</span><span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>w<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        adj<span style="color:#f92672">[</span>w<span style="color:#f92672">]</span><span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>v<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        E<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    /**
-     * 获取最大的度数
-     * @param G
-     * @return
-     */
-    public static int maxDegree(Graph G){
-        int max = 0;
-        for (int i=0;i&lt;G.V;i++){
-            max = Math.max(max,degree(G,i));
-        }
-        return max;
-    }
 
-    /**
-     * 获取平均度数
-     * @param G
-     * @return
-     */
-    public static double avgDegreeSlow(Graph G){
-        float sDeg = 0;
-        for (int i=0;i&lt;G.V;i++)
-            sDeg += degree(G,i);
-        return sDeg / G.V;
-    }
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 和某个节点相邻的节点
+</span><span style="color:#75715e">     * @param v
+</span><span style="color:#75715e">     * @return
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">public</span> Iterable<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">adj</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> adj<span style="color:#f92672">[</span>v<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    /**
-     * 获取平均度数
-     * @param G
-     * @return
-     */
-    public static double avgDegree(Graph G){
-        return 2.0 * G.E / G.V;
-    }
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 计算图的度数
+</span><span style="color:#75715e">     * @param G
+</span><span style="color:#75715e">     * @param v
+</span><span style="color:#75715e">     * @return
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">degree</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">,</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> degree <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> w<span style="color:#f92672">:</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">adj</span><span style="color:#f92672">(</span>v<span style="color:#f92672">)</span><span style="color:#f92672">)</span>degree<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> degree<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    /**
-     * 获取自环个数
-     * @param G
-     * @return
-     */
-    public static int numberOfSelfLoops(Graph G){
-        int c = 0;
-        for (int i=0;i&lt;G.V;i++){
-            for (int num:G.adj(i))
-                if (num == i) c++;
-        }
-        return c/2;
-    }
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 获取最大的度数
+</span><span style="color:#75715e">     * @param G
+</span><span style="color:#75715e">     * @return
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">maxDegree</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> max <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span>0<span style="color:#f92672">;</span>i<span style="color:#f92672">&lt;</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">;</span>i<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            max <span style="color:#f92672">=</span> Math<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span>max<span style="color:#f92672">,</span>degree<span style="color:#f92672">(</span>G<span style="color:#f92672">,</span>i<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> max<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public String toString() {
-        StringBuilder s = new StringBuilder();
-        s.append(V + &#34; vertices, &#34; + E + &#34; edges &#34; + &#34;\n&#34;);
-        for (int v = 0; v &lt; V; v++) {
-            s.append(v + &#34;: &#34;);
-            for (int w : adj[v]) {
-                s.append(w + &#34; &#34;);
-            }
-            s.append(&#34;\n&#34;);
-        }
-        return s.toString();
-    }
-}
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 获取平均度数
+</span><span style="color:#75715e">     * @param G
+</span><span style="color:#75715e">     * @return
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">double</span> <span style="color:#a6e22e">avgDegreeSlow</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">float</span> sDeg <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span>0<span style="color:#f92672">;</span>i<span style="color:#f92672">&lt;</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">;</span>i<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span>
+            sDeg <span style="color:#f92672">+</span><span style="color:#f92672">=</span> degree<span style="color:#f92672">(</span>G<span style="color:#f92672">,</span>i<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> sDeg <span style="color:#f92672">/</span> G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-</code></pre>
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 获取平均度数
+</span><span style="color:#75715e">     * @param G
+</span><span style="color:#75715e">     * @return
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">double</span> <span style="color:#a6e22e">avgDegree</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> 2<span style="color:#f92672">.</span><span style="color:#a6e22e">0</span> <span style="color:#f92672">*</span> G<span style="color:#f92672">.</span><span style="color:#a6e22e">E</span> <span style="color:#f92672">/</span> G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 获取自环个数
+</span><span style="color:#75715e">     * @param G
+</span><span style="color:#75715e">     * @return
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">numberOfSelfLoops</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> c <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span>0<span style="color:#f92672">;</span>i<span style="color:#f92672">&lt;</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">;</span>i<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> num<span style="color:#f92672">:</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">adj</span><span style="color:#f92672">(</span>i<span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>num <span style="color:#f92672">=</span><span style="color:#f92672">=</span> i<span style="color:#f92672">)</span> c<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> c<span style="color:#f92672">/</span>2<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">toString</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        StringBuilder s <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> StringBuilder<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        s<span style="color:#f92672">.</span><span style="color:#a6e22e">append</span><span style="color:#f92672">(</span>V <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; vertices, &#34;</span> <span style="color:#f92672">+</span> E <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; edges &#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> v <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span> v <span style="color:#f92672">&lt;</span> V<span style="color:#f92672">;</span> v<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            s<span style="color:#f92672">.</span><span style="color:#a6e22e">append</span><span style="color:#f92672">(</span>v <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;: &#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> w <span style="color:#f92672">:</span> adj<span style="color:#f92672">[</span>v<span style="color:#f92672">]</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                s<span style="color:#f92672">.</span><span style="color:#a6e22e">append</span><span style="color:#f92672">(</span>w <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+            s<span style="color:#f92672">.</span><span style="color:#a6e22e">append</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;\n&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> s<span style="color:#f92672">.</span><span style="color:#a6e22e">toString</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+
+</pre>
 <h2>搜索算法</h2>
 
 <p>我们需要一个搜索算法搜索两个节点是否连通，和某个节点连通的节点总数，两个节点之间的一条路径。</p>
@@ -178,121 +200,119 @@ boolean|hasPathTo(int v)|是否能连通到这个节点
 Iterable&lt;Integer&gt;|pathTo(int v)|到v的路径</p>
 
 <h2>深度优先搜索</h2>
-
-<pre><code class="language-java">/**
- * @Description: description...
- * @author: LILPIG
- * @date 19-7-7
- * God bless my code...
- */
-package graph;
-
-
-/**
- * 深度优先搜索
- */
-public class DepthFirstSearch implements Search{
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e">/**
+</span><span style="color:#75715e"> * @Description: description...
+</span><span style="color:#75715e"> * @author: LILPIG
+</span><span style="color:#75715e"> * @date 19-7-7
+</span><span style="color:#75715e"> * God bless my code...
+</span><span style="color:#75715e"> */</span>
+<span style="color:#f92672">package</span> graph<span style="color:#f92672">;</span>
 
 
-    private boolean marked[];
-    private int edgeTo[];
-    private final int s;
-    private int count;
-    public DepthFirstSearch(Graph G, int s){
-        marked = new boolean[G.V];
-        edgeTo = new int[G.V];
-        this.s = s;
-        dfs(G,s);
-    }
+<span style="color:#75715e">/**
+</span><span style="color:#75715e"> * 深度优先搜索
+</span><span style="color:#75715e"> */</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">DepthFirstSearch</span> <span style="color:#66d9ef">implements</span> Search<span style="color:#f92672">{</span>
 
-    private void dfs(Graph G,int v){
-        marked[v] = true;
-        count++;
-        for (int i:G.adj(v)){
-            if (!marked[i]) {edgeTo[i]=v;dfs(G,i);}
-        }
-    }
-    @Override
-    public int count(){
-        return count;
-    }
 
-    @Override
-    public boolean hasPathTo(int v) {
-        return marked[v];
-    }
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">boolean</span> marked<span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> edgeTo<span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> s<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> count<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">DepthFirstSearch</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> s<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        marked <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">boolean</span><span style="color:#f92672">[</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        edgeTo <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">[</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">s</span> <span style="color:#f92672">=</span> s<span style="color:#f92672">;</span>
+        dfs<span style="color:#f92672">(</span>G<span style="color:#f92672">,</span>s<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    @Override
-    public Iterable&lt;Integer&gt; pathTo(int v) {
-        if (!hasPathTo(v))return null;
-        Stack&lt;Integer&gt; stack = new Stack&lt;&gt;();
-        for (int x=v;x!=s;x=edgeTo[x])
-            stack.push(x);
-        stack.push(s);
-        return stack;
-    }
-}
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">dfs</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">,</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        marked<span style="color:#f92672">[</span>v<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        count<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">:</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">adj</span><span style="color:#f92672">(</span>v<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>marked<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>edgeTo<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">=</span>v<span style="color:#f92672">;</span>dfs<span style="color:#f92672">(</span>G<span style="color:#f92672">,</span>i<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">count</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> count<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-</code></pre>
+    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">hasPathTo</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> marked<span style="color:#f92672">[</span>v<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
+    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> Iterable<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">pathTo</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>hasPathTo<span style="color:#f92672">(</span>v<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        Stack<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> stack <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Stack<span style="color:#f92672">&lt;</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> x<span style="color:#f92672">=</span>v<span style="color:#f92672">;</span>x<span style="color:#f92672">!</span><span style="color:#f92672">=</span>s<span style="color:#f92672">;</span>x<span style="color:#f92672">=</span>edgeTo<span style="color:#f92672">[</span>x<span style="color:#f92672">]</span><span style="color:#f92672">)</span>
+            stack<span style="color:#f92672">.</span><span style="color:#a6e22e">push</span><span style="color:#f92672">(</span>x<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        stack<span style="color:#f92672">.</span><span style="color:#a6e22e">push</span><span style="color:#f92672">(</span>s<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> stack<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+
+</pre>
 <h2>广度优先搜索</h2>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e">/**
+</span><span style="color:#75715e"> * @Description: description...
+</span><span style="color:#75715e"> * @author: LILPIG
+</span><span style="color:#75715e"> * @date 19-7-7
+</span><span style="color:#75715e"> * God bless my code...
+</span><span style="color:#75715e"> */</span>
+<span style="color:#f92672">package</span> graph<span style="color:#f92672">;</span>
 
-<pre><code class="language-java">/**
- * @Description: description...
- * @author: LILPIG
- * @date 19-7-7
- * God bless my code...
- */
-package graph;
 
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BreadthFirstSearch</span> <span style="color:#66d9ef">implements</span> Search<span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">boolean</span><span style="color:#f92672">[</span><span style="color:#f92672">]</span> marked<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">[</span><span style="color:#f92672">]</span> edgeTo<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> s<span style="color:#f92672">;</span>
 
-public class BreadthFirstSearch implements Search{
-    private boolean[] marked;
-    private int[] edgeTo;
-    private final int s;
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">BreadthFirstSearch</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">,</span><span style="color:#66d9ef">int</span> s<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">s</span> <span style="color:#f92672">=</span> s<span style="color:#f92672">;</span>
+        marked <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">boolean</span><span style="color:#f92672">[</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        edgeTo <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">[</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">V</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        bfs<span style="color:#f92672">(</span>G<span style="color:#f92672">,</span>s<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public BreadthFirstSearch(Graph G,int s) {
-        this.s = s;
-        marked = new boolean[G.V];
-        edgeTo = new int[G.V];
-        bfs(G,s);
-    }
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">bfs</span><span style="color:#f92672">(</span>Graph G<span style="color:#f92672">,</span><span style="color:#66d9ef">int</span> s<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        Queue<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> queue<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> LinkedBlockingQueue<span style="color:#f92672">&lt;</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        marked<span style="color:#f92672">[</span>s<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        queue<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>s<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>queue<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> c <span style="color:#f92672">=</span> queue<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> x<span style="color:#f92672">:</span>G<span style="color:#f92672">.</span><span style="color:#a6e22e">adj</span><span style="color:#f92672">(</span>c<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>marked<span style="color:#f92672">[</span>x<span style="color:#f92672">]</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>edgeTo<span style="color:#f92672">[</span>x<span style="color:#f92672">]</span><span style="color:#f92672">=</span>c<span style="color:#f92672">;</span>bfs<span style="color:#f92672">(</span>G<span style="color:#f92672">,</span>x<span style="color:#f92672">)</span><span style="color:#f92672">;</span>queue<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>x<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
 
-    private void bfs(Graph G,int s) {
-        Queue&lt;Integer&gt; queue=new LinkedBlockingQueue&lt;&gt;();
-        marked[s] = true;
-        queue.add(s);
-        while (!queue.isEmpty()){
-            int c = queue.poll();
-            for (int x:G.adj(c)){
-                if (!marked[x]){edgeTo[x]=c;bfs(G,x);queue.add(x);}
-            }
-        }
+    <span style="color:#f92672">}</span>
 
-    }
+    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">count</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> 0<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    @Override
-    public int count() {
-        return 0;
-    }
+    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">hasPathTo</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> marked<span style="color:#f92672">[</span>v<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    @Override
-    public boolean hasPathTo(int v) {
-        return marked[v];
-    }
+    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> Iterable<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">pathTo</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> v<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>hasPathTo<span style="color:#f92672">(</span>v<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        Stack<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> stack <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Stack<span style="color:#f92672">&lt;</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> x<span style="color:#f92672">=</span>v<span style="color:#f92672">;</span>x<span style="color:#f92672">!</span><span style="color:#f92672">=</span>s<span style="color:#f92672">;</span>x<span style="color:#f92672">=</span>edgeTo<span style="color:#f92672">[</span>x<span style="color:#f92672">]</span><span style="color:#f92672">)</span>
+            stack<span style="color:#f92672">.</span><span style="color:#a6e22e">push</span><span style="color:#f92672">(</span>x<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        stack<span style="color:#f92672">.</span><span style="color:#a6e22e">push</span><span style="color:#f92672">(</span>s<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> stack<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
 
-    @Override
-    public Iterable&lt;Integer&gt; pathTo(int v) {
-        if (!hasPathTo(v))return null;
-        Stack&lt;Integer&gt; stack = new Stack&lt;&gt;();
-        for (int x=v;x!=s;x=edgeTo[x])
-            stack.push(x);
-        stack.push(s);
-        return stack;
-    }
-}
-
-</code></pre>
-
+</pre>
 <p>内容来自《算法 第四版》</p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

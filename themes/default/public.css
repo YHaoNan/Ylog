@@ -1,0 +1,38 @@
+@font-face{
+    font-family: "DefaultDoc";
+    src: url("./assets/Montserrat-Regular.otf");
+}
+
+@font-face{
+    font-family: "DefaultMono";
+    src: url("./assets/Cascadia.ttf");
+}
+
+body,html{
+    font-family: DefaultDoc, sans-serif;
+    color: #48505B;
+    background: #f4f4f5;
+}
+
+a:link{
+    color: #48505B;
+}
+a:visited{
+    color: #48505B;
+}
+a:hover{
+    color: #000000;
+}
+a:active{
+    color: #48505B;
+}
+
+#copyright{
+    font-size: .9em;
+    background: #dddddd;
+    border-radius: .2em;
+    line-height: 1.4em;
+    margin-top: 1em;
+    padding: 1em;
+    border-left: .5em solid #dc3545;
+}

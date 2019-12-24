@@ -1,10 +1,19 @@
 label: LILPIG的博客
+author: LILPIG
 theme: default
 assets: ${POSTDIR}/assets/
 #cdn: https://xxxxxxxxxx/
 
 plugins:
+  copyright:
+    showYlogSupport: true
+    template: |
+      Author: LILPIG<br>
+      The copyright belongs to the author. Please indicate the source of reprint.
+
 
 cmdPlugins:
   gitpush:
     remote: https://xxxxxxxx.git
+
+

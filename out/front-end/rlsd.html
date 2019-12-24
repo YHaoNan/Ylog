@@ -1,4 +1,6 @@
-<html><head><title>手动实现响应式布局</title></head><body><p>最近突然心血来潮学前端。。。</p>
+<html><head><title>手动实现响应式布局</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>手动实现响应式布局</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-05-19 14:55:27</span><span id="categorie">前端</span></div><p>最近突然心血来潮学前端。。。</p>
 
 <p>在研究BootStrap的时候就很好奇他这个响应式布局是怎么实现的，为什么在不同的设备上可以不借助js实现不同的效果？很迷。。。</p>
 
@@ -15,17 +17,15 @@
 <h3>如何实现？</h3>
 
 <p>提供了两份css，然后通过指定<code>media</code>属性来确定什么条件下使用哪份css中的样式。</p>
-
-<pre><code class="language-html">&lt;head&gt;
+<pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">head</span>&gt;
 ...
-    &lt;meta name=&#34;viewport&#34;
-          content=&#34;width=device-width,initial-scale=1.0&#34;&gt;
-    &lt;link rel=&#34;stylesheet&#34; href=&#34;common.css&#34;&gt;
-    &lt;!-- 指定设备屏幕小于等于1000的时候使用该css中的样式 --&gt;
-    &lt;link media=&#34;(max-width:1000px)&#34; rel=&#34;stylesheet&#34; href=&#34;mobile.css&#34;&gt;
-&lt;/head&gt;
-</code></pre>
-
+    &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;viewport&#34;</span>
+          <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;width=device-width,initial-scale=1.0&#34;</span>&gt;
+    &lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stylesheet&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;common.css&#34;</span>&gt;
+    <span style="color:#75715e">&lt;!--</span><span style="color:#75715e"> 指定设备屏幕小于等于1000的时候使用该css中的样式 </span><span style="color:#75715e">--&gt;</span>
+    &lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">media</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(max-width:1000px)&#34;</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stylesheet&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;mobile.css&#34;</span>&gt;
+&lt;/<span style="color:#f92672">head</span>&gt;
+</pre>
 <p>那公共样式得写两份？其实不用，第二个条件满足时只是替换掉第一个中冲突的和添加第一个中没有的。</p>
 
 <p>当第二个条件不满足时，第二个中添加的和修改的玩意都失效。</p>
@@ -35,4 +35,6 @@
 <h3>代码</h3>
 
 <p><a href="https://github.com/YHaoNan/front-end/tree/master/responsive-layout">https://github.com/YHaoNan/front-end/tree/master/responsive-layout</a></p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

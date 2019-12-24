@@ -1,4 +1,6 @@
-<html><head><title>VIM中被我忽略的技巧(复制篇)</title></head><body><h2>背景</h2>
+<html><head><title>VIM中被我忽略的技巧(复制篇)</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>VIM中被我忽略的技巧(复制篇)</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-11-16 19:50:27</span><span id="categorie">Vim</span></div><h2>背景</h2>
 
 <p>VIM中的复制、剪切、粘贴分别对应着<code>y</code>、<code>d</code>、<code>p</code>。</p>
 
@@ -19,19 +21,15 @@
 <p>当你复制了一个单词，除了保存到默认寄存器，它还保存到一个名字是<code>0</code>的寄存器。</p>
 
 <p>你可以使用<code>&#34;0p</code>来插入它。来看下面的场景：</p>
-
-<pre><code>abc
+<pre style="color:#f8f8f2;background-color:#272822">abc
 def
-</code></pre>
-
+</pre>
 <p>比如我们想把第二行也换成abc，那么我们需要使用<code>yw</code>复制第一行内容。然后跳到下一行使用<code>dw</code>删除def，之后使用<code>p</code>粘贴。</p>
 
 <p>但是观察结果，发现好像并没如我们所愿。</p>
-
-<pre><code>abc
+<pre style="color:#f8f8f2;background-color:#272822">abc
 def
-</code></pre>
-
+</pre>
 <p>第二行的内容依旧没变。</p>
 
 <p>因为<code>dw</code>也会将文本保存到默认寄存器。</p>
@@ -74,29 +72,31 @@ def
 
 <tbody>
 <tr>
-<td align="center">”%</td>
+<td align="center">&#34;%</td>
 <td align="center">当前文件名</td>
 </tr>
 
 <tr>
-<td align="center">”#</td>
+<td align="center">&#34;#</td>
 <td align="center">轮换文件名</td>
 </tr>
 
 <tr>
-<td align="center">”.</td>
+<td align="center">&#34;.</td>
 <td align="center">上次插入的文本</td>
 </tr>
 
 <tr>
-<td align="center">”:</td>
+<td align="center">&#34;:</td>
 <td align="center">上次执行的Ex命令</td>
 </tr>
 
 <tr>
-<td align="center">”/</td>
+<td align="center">&#34;/</td>
 <td align="center">上次查找的模式</td>
 </tr>
 </tbody>
 </table>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

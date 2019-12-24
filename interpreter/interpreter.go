@@ -24,6 +24,8 @@ func Run(){
 		}
 		if utils.CmdLen() > 2 {
 			pluginConfig["cmdParams"] = os.Args[2:]
+		}else{
+			pluginConfig["cmdParams"] = []string{}
 		}
 		plugin.Exec(pluginConfig)
 	}else{

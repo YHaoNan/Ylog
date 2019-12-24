@@ -1,0 +1,88 @@
+body, html{
+    margin: 0;
+    padding: 0;
+}
+
+
+body{
+    padding: 2em;
+    margin:auto;
+    max-width:1000px;
+    background: #fff;
+}
+
+code{
+    font-family: DefaultMono;
+    font-size: 1em;
+}
+
+img{
+    display: block;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+#title{
+    font-size: 2em;
+    font-weight: bold;
+}
+
+#categorie-bar{
+    margin-top: 10px;
+    background: #eee;
+    padding:1em;
+}
+
+
+#categorie-bar #time{
+    background: url('assets/time.png');
+    background-size: 1em;
+    background-repeat: no-repeat;
+    padding-left: 1.4em;
+    margin-right: 1em;
+}
+
+#categorie-bar #categorie{
+    background: url('assets/category.png');
+    background-size: 1em;
+    background-repeat: no-repeat;
+    padding-left: 1.4em;
+}
+pre{
+    padding: 2em;
+    box-shadow: 2px 2px 20px  #dddddd;
+    background: #e3e3e3;
+    border-radius: 1em;
+    margin: 2em auto;
+    overflow-x: scroll;
+}
+
+
+#posts{
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+}
+.post{
+    padding: 1em;
+    background: #ffffff;
+    border-radius: .5em;
+    box-shadow: 2px 2px 20px rgba(.2, .2, .2, .2);
+    margin: 40px 0;
+}
+
+.post .post-title{
+    display: block;
+}
+.post .post-date{
+    display: block;
+    font-size: .8em;
+    margin-top: 2em;
+    background: url('assets/time.png');
+    background-size: 1em;
+    background-repeat: no-repeat;
+    padding-left: 1.4em;
+    margin-right: 1em;
+}
+
+

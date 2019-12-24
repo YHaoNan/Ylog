@@ -1,4 +1,6 @@
-<html><head><title>（二）数据可见性以及共享对象 —— 《Java并发编程实战》</title></head><body><p>
+<html><head><title>（二）数据可见性以及共享对象 —— 《Java并发编程实战》</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>（二）数据可见性以及共享对象 —— 《Java并发编程实战》</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-07-26 19:13:30</span><span id="categorie">Java多线程</span></div><p>
 从上一篇文章中可以知道，同步代码块，也就是<code>synchronized</code>标识的代码块可以保证一个操作的原子性，即不可分割，保证了不会出现竞态条件，其他线程读取到的值不会错乱。
 
 但是<code>synchronized</code>并不是只干了这一件事，他还保证了数据的可见性。
@@ -57,7 +59,7 @@ int b = 20;
 </code>
 不要直接认为第一行先于第二行执行，这实际上是没准的事，不过重排序肯定会遵循一些规则，否则我们的代码逻辑就乱了套了。
 
-重排序遵循<code>as-if-serial</code>语义，这名字直译过来是“好像是连续的…”，我们简单了解下这个语义。
+重排序遵循<code>as-if-serial</code>语义，这名字直译过来是“好像是连续的...”，我们简单了解下这个语义。
 
 对代码进行重排要满足数据依赖性，如果两个操作访问同一个变量，且这两个操作中有一个为写操作，此时这两个操作之间就存在数据依赖。如果存在数据依赖，那么重排就会影响代码的执行结果，<code>as-if-serial</code>语义保证了在单线程程序中重排不会影响代码执行结果。
 
@@ -434,9 +436,9 @@ public class Holder{
 
 当然你不要试图运行，发生这件事的概率太小了，几乎无法重现，我的那个老师也说至今没找出重现的办法。
 
-这里要推荐一下老师的课：<a href="https://study.163.com/provider/400000000447005/index.htm">老葛课堂 – 网易云课堂</a>
+这里要推荐一下老师的课：<a href="https://study.163.com/provider/400000000447005/index.htm">老葛课堂 -- 网易云课堂</a>
 
-嘶，昨天向老师咨询这个多线程问题的时候我不知道老师有多线程的课，我和他说我是看《Java并发编程实战》这本书产生的疑问，他只是给我解答，对自己的课只字未提，真的是…今天看到他有个收费的多线程的课我莫名有点小感动，不过才5块，在这个知识付费的年代，几千都不一定学到啥，反正我是去支持了。
+嘶，昨天向老师咨询这个多线程问题的时候我不知道老师有多线程的课，我和他说我是看《Java并发编程实战》这本书产生的疑问，他只是给我解答，对自己的课只字未提，真的是...今天看到他有个收费的多线程的课我莫名有点小感动，不过才5块，在这个知识付费的年代，几千都不一定学到啥，反正我是去支持了。
 
 
 Java能保证不可变对象的可见性，所以可以通过把<code>n</code>声明成final来解决这个问题。
@@ -471,7 +473,7 @@ Java提供了一系列原子操作的对象，可以保证对象操作的原子�
 安全发布只能保证发布那一刻的可见性，如果发布的是可变对象，每次访问时还要做同步操作。
 
 
-—
+---
 
 </p>
 
@@ -480,4 +482,6 @@ Java提供了一系列原子操作的对象，可以保证对象操作的原子�
 
 <li><p><a href="https://www.cnblogs.com/gtaxmjld/p/5274779.html">多线程之指令重排序</a></p></li>
 </ul>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

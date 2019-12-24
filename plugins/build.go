@@ -31,8 +31,15 @@ func getFileNameAndExtName(name string) (string,string){
 	}
 	return name[:lastI],name[lastI + 1:]
 }
-// Walk posts dir in current folder.
+func walkPages(dirToSave,dirToWalk string){
+	walkMarkdown(dirToSave,dirToWalk,false)
+}
+
 func walkPosts(dirToSave , dirToWalk string){
+	walkMarkdown(dirToSave,dirToWalk,true)
+}
+
+func walkMarkdown(dirToSave,dirToWalk string,isPost bool){
 	utils.RemoveIfExist(dirToSave)
 	os.Mkdir(dirToSave,0777)
 	var currentSaveDir string
@@ -51,7 +58,12 @@ func walkPosts(dirToSave , dirToWalk string){
 			if extName == "md"{
 				// Get html source
 				head,doc := utils.ConvertMarkdownToHTMLFromFile(path)
-				currentSaveFile := currentSaveDir + "/" + htmlFileName
+				currentSaveFile := ""
+				if isPost {
+					currentSaveFile = currentSaveDir + "/" + htmlFileName
+				}else{
+					currentSaveFile = dirToSave + "/" + htmlFileName
+				}
 				utils.CreateIfNotExist(currentSaveFile)
 				w,err := os.OpenFile(currentSaveFile,os.O_WRONLY,0666)
 				if err != nil {
@@ -63,6 +75,7 @@ func walkPosts(dirToSave , dirToWalk string){
 				params["srcF"] = path
 				params["dstF"] = currentSaveFile
 				params["document"] = doc
+				params["isPost"] = isPost
 
 				callEachPlugins(params)
 
@@ -72,25 +85,45 @@ func walkPosts(dirToSave , dirToWalk string){
 		}
 		return nil
 	})
+
 }
 
 func callEachPlugins(params map[string]interface{}) {
 	callBuildInPlugins(params)
 	pluginsMap := scheme.GetYlogProjectConfig().PluginsMap
-	for k,_ := range pluginsMap{
+	for k,v := range pluginsMap{
 		plugin ,ok := GetPluginFromLib(k)
+
 		if !ok {
 			log.Panicf("Plugin [ %s ] is not found ! Try run `Ylog install %s to install it." , k,k)
 		}
-		plugin.Exec(params)
+		if !plugin.IsCommandLinePlugin() {
+			for sk,sv := range v{
+				params[sk] = sv
+			}
+			plugin.Exec(params)
+		}
 	}
 }
 
+var pageHandler = NewPageHandler()
+var buildInPlugins = []Plugin{
+	// Handle head of markdown file
+	&HeadHandler{},
+	// Add theme to html file
+	&ThemeHandler{},
+	// Print log to screen
+	&Logger{},
+	// To add some elements to post html file
+	&PostInit{},
+	// Create default page(index,categoires...)
+	pageHandler,
+}
+
 func callBuildInPlugins(params map[string]interface{}) {
-	headHandler := &HeadHandler{}
-	headHandler.Exec(params)
-	logHandler := &Logger{}
-	logHandler.Exec(params)
+	for _ , handler := range buildInPlugins{
+		handler.Exec(params)
+	}
 }
 
 
@@ -101,12 +134,19 @@ func (c *Build) Exec(params map[string]interface{}){
 		log.Panicf("There is an error : %v\n",err)
 	}else{
 		postPath := currentPath + "/posts"
+		pagePath := currentPath + "/pages"
 		_, err :=os.Stat(postPath)
 		if os.IsNotExist(err){
 			log.Panicf("Can't find post dir in %s. Run `mkdir posts`.",currentPath)
 		}
+		_,err = os.Stat(pagePath)
+		if os.IsNotExist(err) {
+			log.Panicf("Can't find page dir in %s. Run `mkdir pages`.",currentPath)
+		}
 		savePath := currentPath + "/out"
 		walkPosts(savePath,postPath)
+		pageHandler.PostRenderOver()
+		walkPages(savePath,pagePath)
 	}
 }
 

@@ -57,7 +57,15 @@ func getHead(md []byte,path string) (map[string]interface{},int){
 
 func ConvertMarkdownToHTML(md []byte,path string) (map[string]interface{},*goquery.Document){
 	head ,i := getHead(md,path)
-	description := blackfriday.Run(md[i:])
+
+	colorRenderer := &CodeBlockHighlightRenderer{
+		html: blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{}),
+		theme: "monokai",
+	}
+	description := blackfriday.Run(md[i:],
+		blackfriday.WithExtensions(blackfriday.CommonExtensions),
+		blackfriday.WithRenderer(colorRenderer))
+
 	doc, error := goquery.NewDocumentFromReader(bytes.NewReader(description))
 	if error != nil{
 		log.Panicf("There is an error : %v\n",error)

@@ -1,4 +1,6 @@
-<html><head><title>Vue中的组件</title></head><body><p>
+<html><head><title>Vue中的组件</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>Vue中的组件</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-08-11 08:29:48</span><span id="categorie">Vue</span></div><p>
 <style>
     #exm{
         text-align: left;
@@ -435,29 +437,31 @@ is属性可以指定当前的模板使用哪个组件，这个可以用来制作
 <p>我们自己编写的组件也可以使用<code>v-model</code>，<code>v-model</code>中的变量会动态传入给组件<code>props</code>中的<code>value</code>，这是固定的。这是组件的父节点到组件的单向绑定，而从组件到父节点的绑定需要在组件中用<code>$emit</code>发射<code>input</code>事件。
 
 如下代码可以将<code>message</code>和<code>my-input</code>组件进行双向绑定，无论哪边的数据更改了都会响应。
-“`html
+```html
 </p><div id="app">
 	<p>{{message}}</p>
 	<my-input v-model="message"></my-input>
 </div><p></p>
 
 <p><script>
-	Vue.component(&lsquo;my-input&rsquo;,{
-		props: [&lsquo;value&rsquo;],
-		template: &lsquo;<div><input :value="value" @input="emitEvent"/>\
-				</div>&rsquo;,
+	Vue.component('my-input',{
+		props: ['value'],
+		template: '<div><input :value="value" @input="emitEvent"/>\
+				</div>',
 		methods: {
 			emitEvent: function(event){
-				this.$emit(&lsquo;input&rsquo;,event.target.value);
+				this.$emit('input',event.target.value);
 			}
 		}
 	})
 	var vm = new Vue({
-		el: &lsquo;#app&rsquo;,
+		el: '#app',
 		data: {
-			message: &lsquo;Hello,World!&rsquo;
+			message: 'Hello,World!'
 		}
 	})
 </script>
-“`</p>
-</body></html>
+```</p>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

@@ -1,4 +1,6 @@
-<html><head><title>BST、2-3树、红黑树和散列函数实现符号表</title></head><body><h2>有序符号表</h2>
+<html><head><title>BST、2-3树、红黑树和散列函数实现符号表</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>BST、2-3树、红黑树和散列函数实现符号表</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-06-29 9:56:24</span><span id="categorie">算法和数据结构</span></div><h2>有序符号表</h2>
 
 <p>有序符号表能保证键的顺序。</p>
 
@@ -7,123 +9,119 @@
 <p>使用两个数组实现也可以，一个存键，一个存值，而且使用数组这种有序的数据结构，我们可以通过下标访问并不相邻的值，这样就可以使用二分算法来查找键，而不是遍历整个数组，这就实现了对数级别的查找功能。</p>
 
 <p>因为是有序符号表，所以每一个键在数组中都是按顺序排列的，所以我们规定键必须是Comparable的，我们编写了一个rank函数，返回传入的key在符号表中应该摆放的位置，rank使用了二分查找，所以可以保证对数级别的查找速度。</p>
-
-<pre><code class="language-java">private int rank(Key key){
-    int lo = 0 , hi = count-1;
-    while (lo&lt;=hi){
-        int mid = lo+(hi-lo)/2;
-        //比较
-        int cmp = key.compareTo(keys[mid]);
-        if (cmp == 0)return mid;
-        if (cmp &gt; 0) lo = mid+1;
-        else hi = mid-1;
-    }
-    return lo;
-}
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">rank</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">int</span> lo <span style="color:#f92672">=</span> 0 <span style="color:#f92672">,</span> hi <span style="color:#f92672">=</span> count<span style="color:#f92672">-</span>1<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>lo<span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span>hi<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> mid <span style="color:#f92672">=</span> lo<span style="color:#f92672">+</span><span style="color:#f92672">(</span>hi<span style="color:#f92672">-</span>lo<span style="color:#f92672">)</span><span style="color:#f92672">/</span>2<span style="color:#f92672">;</span>
+        <span style="color:#75715e">//比较
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>keys<span style="color:#f92672">[</span>mid<span style="color:#f92672">]</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">=</span><span style="color:#f92672">=</span> 0<span style="color:#f92672">)</span><span style="color:#66d9ef">return</span> mid<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> lo <span style="color:#f92672">=</span> mid<span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> hi <span style="color:#f92672">=</span> mid<span style="color:#f92672">-</span>1<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">return</span> lo<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</pre>
 <p>以下是全部代码：</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BinarySearchST</span><span style="color:#f92672">&lt;</span>Key <span style="color:#66d9ef">extends</span> Comparable<span style="color:#f92672">&lt;</span>Key<span style="color:#f92672">&gt;</span><span style="color:#f92672">,</span>Value<span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">implements</span> Iterable<span style="color:#f92672">&lt;</span>Key<span style="color:#f92672">&gt;</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">private</span> Key<span style="color:#f92672">[</span><span style="color:#f92672">]</span> keys<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> Value<span style="color:#f92672">[</span><span style="color:#f92672">]</span> values<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> count<span style="color:#f92672">;</span>
 
-<pre><code class="language-java">public class BinarySearchST&lt;Key extends Comparable&lt;Key&gt;,Value&gt; implements Iterable&lt;Key&gt; {
-    private Key[] keys;
-    private Value[] values;
-    private int count;
-
-    public BinarySearchST(int size){
-        keys = (Key[]) new Comparable[size];
-        values = (Value[]) new Object[size];
-    }
-
-
-    public int size(){return count;}
-
-    public Value get(Key key) {
-        if (isEmpty())return null;
-        int index = rank(key);
-        //注意，index位置的key并不一定等于传入的key，所以还要判断是否相等
-        if (index &lt; count &amp;&amp; keys[index].compareTo(key) == 0)
-            return values[index];
-        return null;
-    }
-    public boolean contains(Key key){
-        return get(key)!=null;
-    }
-
-    public void put(Key key,Value value){
-        if (isFull())throw new RuntimeException(&#34;Can&#39;t put element to a full map.&#34;);
-        int index = rank(key);
-        if (index&lt;count &amp;&amp; keys[index].compareTo(key)==0){
-            values[index] = value;
-            return;
-        }
-        //把index和后面的所有元素往后移动
-        for (int i=count-1;i&gt;=index;i--){
-            keys[i+1] = keys[i];
-            values[i+1] = values[i];
-        }
-        keys[index] = key;
-        values[index] = value;
-        count++;
-    }
-
-    public void delete(Key key){
-        if (isEmpty())return;
-        int index = rank(key);
-        if (index&lt;count &amp;&amp; keys[index].compareTo(key) == 0){
-            //把后面的所有元素往前移动
-            for (int i=index+1;i&lt;count;i++){
-                keys[i-1] = keys[i];
-                values[i-1] = values[i];
-            }
-            count--;
-        }
-    }
-
-    private int rank(Key key){
-        int lo = 0 , hi = count-1;
-        while (lo&lt;=hi){
-            int mid = lo+(hi-lo)/2;
-            int cmp = key.compareTo(keys[mid]);
-            if (cmp == 0)return mid;
-            if (cmp &gt; 0) lo = mid+1;
-            else hi = mid-1;
-        }
-        return lo;
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">BinarySearchST</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> size<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        keys <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>Key<span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">new</span> Comparable<span style="color:#f92672">[</span>size<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        values <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>Value<span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">new</span> Object<span style="color:#f92672">[</span>size<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
 
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">size</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> count<span style="color:#f92672">;</span><span style="color:#f92672">}</span>
 
-    //一些其他方法
-    public Iterator&lt;Key&gt; keys(){
-        return iterator();
-    }
+    <span style="color:#66d9ef">public</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isEmpty<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> index <span style="color:#f92672">=</span> rank<span style="color:#f92672">(</span>key<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//注意，index位置的key并不一定等于传入的key，所以还要判断是否相等
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>index <span style="color:#f92672">&lt;</span> count <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> keys<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span><span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>key<span style="color:#f92672">)</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> 0<span style="color:#f92672">)</span>
+            <span style="color:#66d9ef">return</span> values<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">)</span><span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    private class Iter implements Iterator&lt;Key&gt;{
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isFull<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Can&#39;t put element to a full map.&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> index <span style="color:#f92672">=</span> rank<span style="color:#f92672">(</span>key<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>index<span style="color:#f92672">&lt;</span>count <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> keys<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span><span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>key<span style="color:#f92672">)</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>0<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            values<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#75715e">//把index和后面的所有元素往后移动
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span>count<span style="color:#f92672">-</span>1<span style="color:#f92672">;</span>i<span style="color:#f92672">&gt;</span><span style="color:#f92672">=</span>index<span style="color:#f92672">;</span>i<span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            keys<span style="color:#f92672">[</span>i<span style="color:#f92672">+</span>1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> keys<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+            values<span style="color:#f92672">[</span>i<span style="color:#f92672">+</span>1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> values<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        keys<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> key<span style="color:#f92672">;</span>
+        values<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+        count<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-        private int cursor = 0;
-        @Override
-        public boolean hasNext() {
-            return cursor&lt;count;
-        }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">delete</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isEmpty<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> index <span style="color:#f92672">=</span> rank<span style="color:#f92672">(</span>key<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>index<span style="color:#f92672">&lt;</span>count <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> keys<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span><span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>key<span style="color:#f92672">)</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> 0<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#75715e">//把后面的所有元素往前移动
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span>index<span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>i<span style="color:#f92672">&lt;</span>count<span style="color:#f92672">;</span>i<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+                keys<span style="color:#f92672">[</span>i<span style="color:#f92672">-</span>1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> keys<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+                values<span style="color:#f92672">[</span>i<span style="color:#f92672">-</span>1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> values<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+            count<span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
 
-        @Override
-        public Key next() {
-            return keys[cursor++];
-        }
-    }
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">rank</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> lo <span style="color:#f92672">=</span> 0 <span style="color:#f92672">,</span> hi <span style="color:#f92672">=</span> count<span style="color:#f92672">-</span>1<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>lo<span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span>hi<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> mid <span style="color:#f92672">=</span> lo<span style="color:#f92672">+</span><span style="color:#f92672">(</span>hi<span style="color:#f92672">-</span>lo<span style="color:#f92672">)</span><span style="color:#f92672">/</span>2<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>keys<span style="color:#f92672">[</span>mid<span style="color:#f92672">]</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">=</span><span style="color:#f92672">=</span> 0<span style="color:#f92672">)</span><span style="color:#66d9ef">return</span> mid<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> lo <span style="color:#f92672">=</span> mid<span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">else</span> hi <span style="color:#f92672">=</span> mid<span style="color:#f92672">-</span>1<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> lo<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    @Override
-    public Iterator&lt;Key&gt; iterator() {
-        return new Iter();
-    }
 
-    public boolean isEmpty(){return count==0;}
-    public boolean isFull(){return count==keys.length;}
+
+    <span style="color:#75715e">//一些其他方法
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> Iterator<span style="color:#f92672">&lt;</span>Key<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">keys</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> iterator<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Iter</span> <span style="color:#66d9ef">implements</span> Iterator<span style="color:#f92672">&lt;</span>Key<span style="color:#f92672">&gt;</span><span style="color:#f92672">{</span>
+
+        <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> cursor <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+        <span style="color:#a6e22e">@Override</span>
+        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">hasNext</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">return</span> cursor<span style="color:#f92672">&lt;</span>count<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+
+        <span style="color:#a6e22e">@Override</span>
+        <span style="color:#66d9ef">public</span> Key <span style="color:#a6e22e">next</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">return</span> keys<span style="color:#f92672">[</span>cursor<span style="color:#f92672">+</span><span style="color:#f92672">+</span><span style="color:#f92672">]</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> Iterator<span style="color:#f92672">&lt;</span>Key<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">iterator</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Iter<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> count<span style="color:#f92672">=</span><span style="color:#f92672">=</span>0<span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isFull</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> count<span style="color:#f92672">=</span><span style="color:#f92672">=</span>keys<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
 
     
-}
-</code></pre>
-
+<span style="color:#f92672">}</span>
+</pre>
 <p>这下就能保证对数级别的查找操作了，但是。。对于插入和删除操作好像。。。还是很慢，因为删除要移动rank返回的索引后面的所有元素，让他们都前进一个位置，插入新key操作则是要向后一个位置，虽然说符号表的插入新key和删除操作远没有查询用的多，但是这样的代码还是无法面对较大规模的任务。</p>
 
 <p>这时候可以考虑用链式存储，链式存储没有数组的限制，用链表来思考，如果在链表中间删除一个元素的话，只需要将他的前后结点相连即可，而数组中删除一个元素则需要移动元素。</p>
@@ -145,187 +143,179 @@
 4. 左右子节点都没有，直接删</p>
 
 <p>关于第三点，为什么要用右子节点中最小节点顶替呢？假设要删的节点是x，在它的父节点的左侧，那么x的子节点肯定比x的父节点小，否则它就在x的父节点的右面了，反之亦然。而x的右节点中最小的子节点肯定大于x的左子节点，所以，综上所述，这个数可以胜任。</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BST</span><span style="color:#f92672">&lt;</span>Key <span style="color:#66d9ef">extends</span> Comparable<span style="color:#f92672">&lt;</span>Key<span style="color:#f92672">&gt;</span><span style="color:#f92672">,</span>Value<span style="color:#f92672">&gt;</span><span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Node</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">private</span> Node left<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">private</span> Node right<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">private</span> Key key<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">private</span> Value value<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> N<span style="color:#f92672">;</span>
 
-<pre><code class="language-java">public class BST&lt;Key extends Comparable&lt;Key&gt;,Value&gt;{
-    class Node{
-        private Node left;
-        private Node right;
-        private Key key;
-        private Value value;
-        private int N;
+        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">Node</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span> Value value<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> n<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> key<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+            N <span style="color:#f92672">=</span> n<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
 
-        public Node(Key key, Value value, int n) {
-            this.key = key;
-            this.value = value;
-            N = n;
-        }
-    }
+    <span style="color:#66d9ef">private</span> Node root<span style="color:#f92672">;</span>
 
-    private Node root;
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">BST</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span> <span style="color:#f92672">}</span>
 
-    public BST(){ }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        root <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public void put(Key key,Value value){
-        root = put(key,value,root);
-    }
-
-    private Node put(Key key,Value value,Node node){
-        if (node == null) return new Node(key,value,1);
-        int cmp = key.compareTo(node.key);
-        if (cmp &gt; 0) node.right = put(key,value,node.right);
-        else if (cmp &lt; 0) node.left = put(key,value,node.left);
-        else {
-            node.value = value;
-        }
-        node.N = size(node.left)+size(node.right)+1;
-        return node;
-    }
+    <span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">,</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Node<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>1<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        node<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> node<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
 
-    public Value get(Key key){
-        return get(key,root);
-    }
-    private Value get(Key key,Node node){
-        if (node == null) return null;
-        int cmp = key.compareTo(node.key);
-        if (cmp &gt; 0) return get(key,node.right);
-        else if (cmp &lt; 0) return get(key,node.left);
-        else {
-            return node.value;
-        }
-    }
+    <span style="color:#66d9ef">public</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">return</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
 
-    public Node min(){return min(root);}
-    private Node min(Node node){
-        if (node.left == null) return node.right;
-        return min(node.left);
-    }
+    <span style="color:#66d9ef">public</span> Node <span style="color:#a6e22e">min</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> min<span style="color:#f92672">(</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">min</span><span style="color:#f92672">(</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> min<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public void deleteMin(){
-        root = deleteMin(root);
-    }
-    private Node deleteMin(Node node){
-        if (node.left == null) return node.right;
-        node.left = deleteMin(node.left);
-        node.N = size(node.left)+size(node.right)+1;
-        return node;
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">deleteMin</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        root <span style="color:#f92672">=</span> deleteMin<span style="color:#f92672">(</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">deleteMin</span><span style="color:#f92672">(</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+        node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> deleteMin<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        node<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> node<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-    public void delete(Key key){root = delete(key,root);}
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">delete</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>root <span style="color:#f92672">=</span> delete<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
 
-    public Node delete(Key key,Node node){
-        if (node == null) return null;
-        int cmp = key.compareTo(node.key);
-        if (cmp &gt; 0) node.right = delete(key,node.right);
-        else if (cmp &lt; 0) node.left = delete(key,node.left);
-        else {
-            //没有左节点
-            if (node.left==null) return node.right;
-            //没有右节点
-            if (node.right==null) return node.left;
-            Node t = node;
-            //找到右节点中最小的
-            node = min(t.right);
-            //删掉这个最小的
-            node.right = deleteMin(t.right);
-            //顶替之前的元素的位置
-            node.left = t.left;
-        }
-        node.N = size(node.left)+size(node.right)+1;
-        return node;
-    }
-    public int size(){return size(root);}
-    private int size(Node node){
-        return node!=null?node.N:0;
-    }
-}
-</code></pre>
-
+    <span style="color:#66d9ef">public</span> Node <span style="color:#a6e22e">delete</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> delete<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> delete<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//没有左节点
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+            <span style="color:#75715e">//没有右节点
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">;</span>
+            Node t <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span>
+            <span style="color:#75715e">//找到右节点中最小的
+</span><span style="color:#75715e"></span>            node <span style="color:#f92672">=</span> min<span style="color:#f92672">(</span>t<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#75715e">//删掉这个最小的
+</span><span style="color:#75715e"></span>            node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> deleteMin<span style="color:#f92672">(</span>t<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#75715e">//顶替之前的元素的位置
+</span><span style="color:#75715e"></span>            node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> t<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        node<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> node<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">size</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> size<span style="color:#f92672">(</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">size</span><span style="color:#f92672">(</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> node<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">?</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span><span style="color:#f92672">:</span>0<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</pre>
 <h4>习题</h4>
 
 <ol>
 <li><p>为二叉查找树添加一个方法<code>height()</code>来计算树的高度。</p>
-
-<pre><code class="language-java">public int height() {
-    return height(root);
-}
-private int height(Node x) {
-    int size = 1;
-    if (node==null)return 0;
-    if (node.right != null) size = Math.max(1+height(node.right),size);
-    if (node.left != null) size = Math.max(1+height(node.left),size);
-    return size;
-}
-</code></pre>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> height<span style="color:#f92672">(</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">(</span>Node x<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">int</span> size <span style="color:#f92672">=</span> 1<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#66d9ef">return</span> 0<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> size <span style="color:#f92672">=</span> Math<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span>1<span style="color:#f92672">+</span>height<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">,</span>size<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> size <span style="color:#f92672">=</span> Math<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span>1<span style="color:#f92672">+</span>height<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">,</span>size<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">return</span> size<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</pre>
 <ol>
 <li><p>为二叉查找树实现非递归的<code>get</code>和<code>put</code>方法。</p>
-
-<pre><code class="language-java">public void put(Key key,Value value){
-Node node = new Node(key,value,1);
-if (root == null){root=node;return;}
-Node cur = root,parent = null;
-while (cur!=null){
-    parent = cur;
-    int cmp = key.compareTo(cur.key);
-    if (cmp &gt; 0) cur=cur.right;
-    else if (cmp &lt; 0) cur=cur.left;
-    else {cur.value = value;return;}
-}
-int cmp = key.compareTo(parent.key);
-if (cmp &lt; 0) parent.left  = node;
-else parent.right = node;
-}
-</code></pre>
-<pre><code class="language-java">public Value get(Key key){
-Node cur = root;
-while (cur!=null){
-    int cmp = key.compareTo(cur.key);
-    if (cmp &gt; 0) cur=cur.right;
-    else if (cmp &lt; 0) cur=cur.left;
-    else {return cur.value;}
-}
-return null;
-}
-</code></pre></li>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+Node node <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Node<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>1<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>root <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>root<span style="color:#f92672">=</span>node<span style="color:#f92672">;</span><span style="color:#66d9ef">return</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+Node cur <span style="color:#f92672">=</span> root<span style="color:#f92672">,</span>parent <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>cur<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+    parent <span style="color:#f92672">=</span> cur<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>cur<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> cur<span style="color:#f92672">=</span>cur<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> cur<span style="color:#f92672">=</span>cur<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>cur<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span><span style="color:#66d9ef">return</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+<span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>parent<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> parent<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span>  <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span>
+<span style="color:#66d9ef">else</span> parent<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</pre><pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">public</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+Node cur <span style="color:#f92672">=</span> root<span style="color:#f92672">;</span>
+<span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>cur<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>cur<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> cur<span style="color:#f92672">=</span>cur<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> cur<span style="color:#f92672">=</span>cur<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> cur<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</pre></li>
 
 <li><p>修改二叉查找树的实现，将最近访问的节点Node保存在一个变量中，这样<code>get()</code>或<code>put()</code>再次访问同一个键的时候就只需要常数时间了。</p>
-
-<pre><code class="language-java">private Node lastUse = null;
-</code></pre>
-<pre><code class="language-java">//get
-public Value get(Key key){
-if (lastUse!=null &amp;&amp; lastUse.key.compareTo(key)==0) return lastUse.value;
-return get(key,root);
-}
-private Value get(Key key,Node node){
-if (node == null) return null;
-int cmp = key.compareTo(node.key);
-if (cmp &gt; 0) return get(key,node.right);
-else if (cmp &lt; 0) return get(key,node.left);
-else {
-    lastUse = node;
-    return node.value;
-}
-}
-</code></pre>
-<pre><code class="language-java">//put
-public void put(Key key,Value value) {
-if (lastUse!=null &amp;&amp; lastUse.key.compareTo(key)==0) {lastUse.value = value;return;}
-root = put(key,value,root);
-}
-private Node put(Key key,Value value,Node node){
-if (node == null) {lastUse = new Node(key,value,1);return lastUse;}
-int cmp = key.compareTo(node.key);
-if (cmp &gt; 0) node.right = put(key,value,node.right);
-else if (cmp &lt; 0) node.left = put(key,value,node.left);
-else {
-    lastUse = node;
-    node.value = value;
-}
-node.N = size(node.left)+size(node.right)+1;
-return node;
-}
-</code></pre></li>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">private</span> Node lastUse <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+</pre><pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e">//get
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">public</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>lastUse<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> lastUse<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>key<span style="color:#f92672">)</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>0<span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> lastUse<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+<span style="color:#66d9ef">private</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+    lastUse <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">return</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</pre><pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e">//put
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>lastUse<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> lastUse<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>key<span style="color:#f92672">)</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>lastUse<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span><span style="color:#66d9ef">return</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+root <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+<span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">,</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>lastUse <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Node<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>1<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#66d9ef">return</span> lastUse<span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+<span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+    lastUse <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span>
+    node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+node<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>
+<span style="color:#66d9ef">return</span> node<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</pre></li>
 </ol></li>
 </ol>
 
@@ -413,40 +403,36 @@ return node;
 3. 到最底层的每一个节点的每一条路径中经过的黑色节点的数量相同</p>
 
 <p>给出节点的定义：</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> RED <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> BLACK <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
 
-<pre><code class="language-java">private static final boolean RED = true;
-private static final boolean BLACK = false;
-
-private class Node{
-    Key key;
-    Value value;
-    Node left;
-    Node right;
-    int N;
-    boolean color;
+<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Node</span><span style="color:#f92672">{</span>
+    Key key<span style="color:#f92672">;</span>
+    Value value<span style="color:#f92672">;</span>
+    Node left<span style="color:#f92672">;</span>
+    Node right<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">int</span> N<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">boolean</span> color<span style="color:#f92672">;</span>
 
 
-    public Node(Key key, Value value, int n, boolean color) {
-        this.key = key;
-        this.value = value;
-        N = n;
-        this.color = color;
-    }
-}
-</code></pre>
-
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">Node</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span> Value value<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> n<span style="color:#f92672">,</span> <span style="color:#66d9ef">boolean</span> color<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> key<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+        N <span style="color:#f92672">=</span> n<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> color<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</pre>
 <p>在2-3树中，向上分解需要借助4节点，在红黑树中也有4节点，如果一个节点的左链接和右链接都是红的，你可以把它看做一个4节点，当然和2-3树中4节点会被分解一样，红黑树中的4节点也会被分解成三个2节点（当然，中间节点最后会向上组成3节点）。</p>
 
 <p>而且在红黑树这种数据结构中，把4节点分解成3个2节点非常简单，只需要把链接变成黑的就好了：</p>
-
-<pre><code class="language-java">public void flipColors(Node h){
-    //父节点变为红色，相当于2-3树中的中间节点向上组成3节点
-    h.color = RED;
-    h.left.color = BLACK;
-    h.right.color = BLACK;
-}
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">flipColors</span><span style="color:#f92672">(</span>Node h<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+    <span style="color:#75715e">//父节点变为红色，相当于2-3树中的中间节点向上组成3节点
+</span><span style="color:#75715e"></span>    h<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> RED<span style="color:#f92672">;</span>
+    h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> BLACK<span style="color:#f92672">;</span>
+    h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> BLACK<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</pre>
 <p>如下图：</p>
 
 <p><img src="https://algs4.cs.princeton.edu/33balanced/images/color-flip.png" alt="img"/></p>
@@ -468,108 +454,106 @@ private class Node{
 <p><img src="https://img-blog.csdn.net/20171028113830847?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGVvbmxpdTE5OTU=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="img"/></p>
 
 <p>接下来给出红黑树的实现：</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#f92672">import</span> utils.ConsoleTest<span style="color:#f92672">;</span>
 
-<pre><code class="language-java">import utils.ConsoleTest;
+<span style="color:#75715e">/**
+</span><span style="color:#75715e"> * @Description: 红黑树的Java实现
+</span><span style="color:#75715e"> * @author: LILPIG
+</span><span style="color:#75715e"> * @date 2019/6/30 16:52
+</span><span style="color:#75715e"> * God bless my code...
+</span><span style="color:#75715e"> */</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RedBlackBST</span> <span style="color:#f92672">&lt;</span>Key <span style="color:#66d9ef">extends</span> Comparable<span style="color:#f92672">&lt;</span>Key<span style="color:#f92672">&gt;</span> <span style="color:#f92672">,</span> Value<span style="color:#f92672">&gt;</span><span style="color:#f92672">{</span>
 
-/**
- * @Description: 红黑树的Java实现
- * @author: LILPIG
- * @date 2019/6/30 16:52
- * God bless my code...
- */
-public class RedBlackBST &lt;Key extends Comparable&lt;Key&gt; , Value&gt;{
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> RED <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> BLACK <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
 
-    private static final boolean RED = true;
-    private static final boolean BLACK = false;
-
-    private class Node{
-        Key key;
-        Value value;
-        Node left;
-        Node right;
-        int N;
-        boolean color;
-
-
-        public Node(Key key, Value value, int n, boolean color) {
-            this.key = key;
-            this.value = value;
-            N = n;
-            this.color = color;
-        }
-    }
-
-    private Node root = null;
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Node</span><span style="color:#f92672">{</span>
+        Key key<span style="color:#f92672">;</span>
+        Value value<span style="color:#f92672">;</span>
+        Node left<span style="color:#f92672">;</span>
+        Node right<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> N<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">boolean</span> color<span style="color:#f92672">;</span>
 
 
-    public void put(Key key,Value value){root = put(key,value,root);root.color=BLACK;}
-    private Node put(Key key,Value value,Node node){
-        if (node == null) {return new Node(key,value,1,RED);}
-        int cmp = key.compareTo(node.key);
-        if (cmp &gt; 0) node.right = put(key,value,node.right);
-        else if (cmp &lt; 0) node.left = put(key,value,node.left);
-        else {
-            node.value = value;
-        }
-        if (isRed(node.right) &amp;&amp; !isRed(node.left)) node = rotateLeft(node);
-        if (isRed(node.left) &amp;&amp; isRed(node.left.left)) node = rotateRight(node);
-        if (isRed(node.left) &amp;&amp; isRed(node.right)) flipColors(node);
+        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">Node</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span> Value value<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> n<span style="color:#f92672">,</span> <span style="color:#66d9ef">boolean</span> color<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> key<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+            N <span style="color:#f92672">=</span> n<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> color<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
 
-        node.N = size(node.left)+size(node.right)+1;
-        return node;
-    }
+    <span style="color:#66d9ef">private</span> Node root <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
 
-    public Value get(Key key){
-        return get(key,root);
-    }
-    private Value get(Key key, Node node){
-        if (node == null) return null;
-        int cmp = key.compareTo(node.key);
-        if (cmp &gt; 0) return get(key,node.right);
-        else if (cmp &lt; 0) return get(key,node.left);
-        else {
-            return node.value;
-        }
-    }
 
-    //左旋转
-    private Node rotateLeft(Node h){
-        Node x = h.right;
-        h.right = x.left;
-        x.left = h;
-        x.color = h.color;
-        h.color = RED;
-        x.N = h.N;
-        h.N = 1 + size(h.left) + size(h.right);
-        return x;
-    }
-    //右旋转
-    private Node rotateRight(Node h){
-        Node x = h.left;
-        h.left = x.right;
-        x.right = h;
-        x.color = h.color;
-        h.color = RED;
-        x.N = h.N;
-        h.N = 1 + size(h.left) + size(h.right);
-        return x;
-    }
-    //改变颜色
-    private void flipColors(Node h){
-        h.color = RED;
-        h.left.color = BLACK;
-        h.right.color = BLACK;
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">)</span><span style="color:#f92672">{</span>root <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>root<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span><span style="color:#f92672">=</span>BLACK<span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span>Value value<span style="color:#f92672">,</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Node<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>1<span style="color:#f92672">,</span>RED<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> put<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>value<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isRed<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>isRed<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> node <span style="color:#f92672">=</span> rotateLeft<span style="color:#f92672">(</span>node<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isRed<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> isRed<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> node <span style="color:#f92672">=</span> rotateRight<span style="color:#f92672">(</span>node<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isRed<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> isRed<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> flipColors<span style="color:#f92672">(</span>node<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
 
-    public int size(){return size(root);}
-    private int size(Node node){
-        return node!=null?node.N:0;
-    }
-    private boolean isRed(Node node){return node!=null?node.color:false;}
+        node<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>size<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">+</span>1<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> node<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
 
-}
-</code></pre>
+    <span style="color:#66d9ef">public</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> Value <span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>Key key<span style="color:#f92672">,</span> Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> cmp <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">compareTo</span><span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>cmp <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> get<span style="color:#f92672">(</span>key<span style="color:#f92672">,</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">return</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
 
+    <span style="color:#75715e">//左旋转
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">rotateLeft</span><span style="color:#f92672">(</span>Node h<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        Node x <span style="color:#f92672">=</span> h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">;</span>
+        x<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> h<span style="color:#f92672">;</span>
+        x<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> h<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span><span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> RED<span style="color:#f92672">;</span>
+        x<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> h<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span><span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> 1 <span style="color:#f92672">+</span> size<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span> <span style="color:#f92672">+</span> size<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> x<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#75715e">//右旋转
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">rotateRight</span><span style="color:#f92672">(</span>Node h<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        Node x <span style="color:#f92672">=</span> h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span> x<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+        x<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> h<span style="color:#f92672">;</span>
+        x<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> h<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span><span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> RED<span style="color:#f92672">;</span>
+        x<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> h<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span><span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span> <span style="color:#f92672">=</span> 1 <span style="color:#f92672">+</span> size<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span> <span style="color:#f92672">+</span> size<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> x<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#75715e">//改变颜色
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">flipColors</span><span style="color:#f92672">(</span>Node h<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> RED<span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> BLACK<span style="color:#f92672">;</span>
+        h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> BLACK<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">size</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> size<span style="color:#f92672">(</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">size</span><span style="color:#f92672">(</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> node<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">?</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">N</span><span style="color:#f92672">:</span>0<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isRed</span><span style="color:#f92672">(</span>Node node<span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#66d9ef">return</span> node<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">?</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span><span style="color:#f92672">:</span><span style="color:#66d9ef">false</span><span style="color:#f92672">;</span><span style="color:#f92672">}</span>
+
+<span style="color:#f92672">}</span>
+</pre>
 <h3>删除</h3>
 
 <p>删除操作是红黑树中最麻烦的操作。</p>
@@ -592,42 +576,40 @@ public class RedBlackBST &lt;Key extends Comparable&lt;Key&gt; , Value&gt;{
 <p><img src="https://img-blog.csdn.net/20171028114059951?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGVvbmxpdTE5OTU=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="img"/></p>
 
 <p>有了这些，我们可以实现删除最小键这个操作了。</p>
-
-<pre><code class="language-java">public void deleteMin(){
-    if (!isRed(root.left) &amp;&amp; !isRed(root.right))//这个即判断根节点的两个子节点是不是2节点，如果是则把root的颜色改为红色，这个操作会在后面的moveRedLeft方法调用中使之和左右子节点构成4节点
-        root.color = RED;
-    root = deleteMin(root);
-    //因为根节点始终是黑的，递归调用完之后修复
-    root.color = BLACK;
-}
-private Node deleteMin(Node h) {
-    //为空代表是最小了
-    if (h.left == null) return null;
-    //这个操作可以确定左子节点是个2节点（如果h.left.left是红的，则h.left是一个3节点的右键）
-    if (!isRed(h.left) &amp;&amp; !isRed(h.left.left))
-        //从自己身上或者右子节点借键给左子节点
-        h= moveRedLeft(h);
-    //递归向左调用
-    h.left= deleteMin(h.left);
-    //最后修复树为一个标准2-3树（过程中可能生成4节点和向右的红链接）
-    return balance(h);
-}
-//向左移动，也就是我们说的借给左子树
-private Node moveRedLeft(Node h){
-    //修复颜色，这个方法把当前设置成黑的，左右节点设置成红的，这样就生成了一个4节点，如果右子节点是一个2节点，那么该操作会将左子节点，当前节点和右子节点合并为一个4节点
-    flipColorsMove(h);
-    if (isRed(h.right.left)){//如果h的左侧子节点的最小的兄弟节点是红的，也就是不是2节点（因为经过颜色修复后h是一个4节点，所以h.right.left就是h.left的最小兄弟节点）
-        //向右旋转h.right的目的是把最小的兄弟节点排到最前
-        h.right = rotateRight(h.right);
-        //向左旋转实际上就是把节点接过来
-        h = rotateLeft(h);
-        //修复颜色
-        flipColors(h);
-    }
-    return h;
-}
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">deleteMin</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>isRed<span style="color:#f92672">(</span>root<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>isRed<span style="color:#f92672">(</span>root<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#75715e">//这个即判断根节点的两个子节点是不是2节点，如果是则把root的颜色改为红色，这个操作会在后面的moveRedLeft方法调用中使之和左右子节点构成4节点
+</span><span style="color:#75715e"></span>        root<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> RED<span style="color:#f92672">;</span>
+    root <span style="color:#f92672">=</span> deleteMin<span style="color:#f92672">(</span>root<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#75715e">//因为根节点始终是黑的，递归调用完之后修复
+</span><span style="color:#75715e"></span>    root<span style="color:#f92672">.</span><span style="color:#a6e22e">color</span> <span style="color:#f92672">=</span> BLACK<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+<span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">deleteMin</span><span style="color:#f92672">(</span>Node h<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#75715e">//为空代表是最小了
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+    <span style="color:#75715e">//这个操作可以确定左子节点是个2节点（如果h.left.left是红的，则h.left是一个3节点的右键）
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>isRed<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>isRed<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+        <span style="color:#75715e">//从自己身上或者右子节点借键给左子节点
+</span><span style="color:#75715e"></span>        h<span style="color:#f92672">=</span> moveRedLeft<span style="color:#f92672">(</span>h<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#75715e">//递归向左调用
+</span><span style="color:#75715e"></span>    h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">=</span> deleteMin<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#75715e">//最后修复树为一个标准2-3树（过程中可能生成4节点和向右的红链接）
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> balance<span style="color:#f92672">(</span>h<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+<span style="color:#75715e">//向左移动，也就是我们说的借给左子树
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">moveRedLeft</span><span style="color:#f92672">(</span>Node h<span style="color:#f92672">)</span><span style="color:#f92672">{</span>
+    <span style="color:#75715e">//修复颜色，这个方法把当前设置成黑的，左右节点设置成红的，这样就生成了一个4节点，如果右子节点是一个2节点，那么该操作会将左子节点，当前节点和右子节点合并为一个4节点
+</span><span style="color:#75715e"></span>    flipColorsMove<span style="color:#f92672">(</span>h<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isRed<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">left</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">{</span><span style="color:#75715e">//如果h的左侧子节点的最小的兄弟节点是红的，也就是不是2节点（因为经过颜色修复后h是一个4节点，所以h.right.left就是h.left的最小兄弟节点）
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//向右旋转h.right的目的是把最小的兄弟节点排到最前
+</span><span style="color:#75715e"></span>        h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">=</span> rotateRight<span style="color:#f92672">(</span>h<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//向左旋转实际上就是把节点接过来
+</span><span style="color:#75715e"></span>        h <span style="color:#f92672">=</span> rotateLeft<span style="color:#f92672">(</span>h<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//修复颜色
+</span><span style="color:#75715e"></span>        flipColors<span style="color:#f92672">(</span>h<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">return</span> h<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</pre>
 <h4>删除最大键</h4>
 
 <p>略</p>
@@ -650,4 +632,6 @@ private Node moveRedLeft(Node h){
 <li>《算法 第4版 - Robert Sedgewick / Kevin Wayne》</li>
 <li><a href="https://algs4.cs.princeton.edu/33balanced/">3.3 Balanced Search Trees</a></li>
 </ul>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

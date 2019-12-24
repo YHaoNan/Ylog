@@ -9,6 +9,7 @@ import (
 var ylogProjectConfig *Config
 
 type Config struct {
+	Author string `yaml:"author"`
 	Label string `yaml:"label"`
 	Theme string `yaml:"theme"`
 	Assets string `yaml:"assets"`

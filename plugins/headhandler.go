@@ -19,5 +19,8 @@ func (c *HeadHandler) IsCommandLinePlugin() bool{
 func (c *HeadHandler) Exec(params map[string]interface{}){
 	doc := params["document"].(*goquery.Document)
 	head := params["head"].(map[string]interface{})
-	doc.Find("head").AppendHtml(fmt.Sprintf("<title>%s</title>",head["title"].(string)))
+	headEle := doc.Find("head")
+	headEle.AppendHtml(fmt.Sprintf("<title>%s</title>",head["title"].(string)))
+	headEle.AppendHtml(`<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />`)
+	headEle.AppendHtml(`<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
 }

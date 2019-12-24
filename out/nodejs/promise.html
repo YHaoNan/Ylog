@@ -1,4 +1,6 @@
-<html><head><title>Nodejs中的异步编程 -- Promise</title></head><body><p>Promise是一个用于链式编写异步代码的规范。嘶。我感觉没有<code>async</code>好使，不过可能各有各的好处吧！VSCode API整个都使用了Promise规范。
+<html><head><title>Nodejs中的异步编程 -- Promise</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>Nodejs中的异步编程 -- Promise</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-07-25 14:33:46</span><span id="categorie">NodeJS</span></div><p>Promise是一个用于链式编写异步代码的规范。嘶。我感觉没有<code>async</code>好使，不过可能各有各的好处吧！VSCode API整个都使用了Promise规范。
 
 Promise从语义上看就是一个承诺，承诺有两种状态，一个是兑现了(resolve 解决)、一个是没有兑现(reject 拒绝)，Promise通过这两种状态控制异步操作。
 
@@ -50,4 +52,6 @@ Promise.all([promise1,promise2,promise3]).then(data=&gt;{
 
 有任何一个promise返回了reject，都会回调<code>catch</code>，如果全部执行成功，<code>then</code>会被执行，并且所有的任务的结果会被封装成数组传递进去。
 </p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

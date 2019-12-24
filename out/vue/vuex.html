@@ -1,4 +1,6 @@
-<html><head><title>Vuex状态管理</title></head><body><p>Vue中可以通过子组件可以通过<code>prop</code>获取父组件传入的数据，子组件可以通过<code>$emit</code>来发射事件与父组件交互，但是很多情况下不单单是父子组件之间的交互，还需要跨级交互和兄弟组件交互。Vuex可以很好的实现这一功能。</p>
+<html><head><title>Vuex状态管理</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>Vuex状态管理</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-08-21 8:23:48</span><span id="categorie">vue</span></div><p>Vue中可以通过子组件可以通过<code>prop</code>获取父组件传入的数据，子组件可以通过<code>$emit</code>来发射事件与父组件交互，但是很多情况下不单单是父子组件之间的交互，还需要跨级交互和兄弟组件交互。Vuex可以很好的实现这一功能。</p>
 
 <h2>安装</h2>
 
@@ -9,8 +11,7 @@
 <p>它也是一个插件，和路由插件一样，需要先<code>Vue.use</code>，然后再在根节点的配置中指定一下。</p>
 
 <p>目录结构如下，完全复制自路由那篇笔记。</p>
-
-<pre><code>.
+<pre style="color:#f8f8f2;background-color:#272822">.
 ├── index.html
 ├── package.json
 ├── package-lock.json
@@ -23,215 +24,192 @@
 └── webpack.config.js
 
 1 directory, 9 files
-</code></pre>
-
+</pre>
 <p>在<code>index.js</code>中引用Vuex：</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Vue</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;vue&#39;</span>
+<span style="color:#66d9ef">import</span> <span style="color:#a6e22e">App</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;./App.vue&#39;</span>
+<span style="color:#66d9ef">import</span> <span style="color:#a6e22e">VueRouter</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;vue-router&#39;</span>
+<span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Vuex</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;vuex&#39;</span>
 
-<pre><code class="language-js">import Vue from &#39;vue&#39;
-import App from &#39;./App.vue&#39;
-import VueRouter from &#39;vue-router&#39;
-import Vuex from &#39;vuex&#39;
+<span style="color:#a6e22e">Vue</span>.<span style="color:#a6e22e">use</span>(<span style="color:#a6e22e">Vuex</span>);
+<span style="color:#a6e22e">Vue</span>.<span style="color:#a6e22e">use</span>(<span style="color:#a6e22e">VueRouter</span>);
 
-Vue.use(Vuex);
-Vue.use(VueRouter);
-
-//...
-
-const store = new Vuex.Store({
+<span style="color:#75715e">//...
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">store</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vuex</span>.<span style="color:#a6e22e">Store</span>({
     
 })
 
-new Vue({
-    el: &#39;#app&#39;,
-    router: router,
-    store: store,
-    render: h =&gt; h(App)
+<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vue</span>({
+    <span style="color:#a6e22e">el</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;#app&#39;</span>,
+    <span style="color:#a6e22e">router</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">router</span>,
+    <span style="color:#a6e22e">store</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">store</span>,
+    <span style="color:#a6e22e">render</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">h</span> =&gt; <span style="color:#a6e22e">h</span>(<span style="color:#a6e22e">App</span>)
 });
 
-</code></pre>
-
+</pre>
 <p>我们通过这个<code>store</code>来存储全局状态，比如：</p>
-
-<pre><code class="language-js">const store = new Vuex.Store({
-    state: {
-        count: 0
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">store</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vuex</span>.<span style="color:#a6e22e">Store</span>({
+    <span style="color:#a6e22e">state</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>
     }              
 })
-</code></pre>
-
+</pre>
 <p><code>state</code>是全局可访问的状态，这里面的变量都是响应式的，可以在其他组件这样引用它：</p>
 
 <p><code>index.vue</code>：</p>
-
-<pre><code class="language-html">&lt;template&gt;
-    &lt;div&gt;
+<pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">template</span>&gt;
+    &lt;<span style="color:#f92672">div</span>&gt;
         {{ $store.state.count }}
         This is the index page.
-    &lt;/div&gt;
-&lt;/template&gt;
-</code></pre>
-
+    &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">template</span>&gt;
+</pre>
 <p>如果在所有需要引用<code>count</code>的地方都这样写有些麻烦，可以用<code>computed</code>：</p>
-
-<pre><code class="language-html">&lt;template&gt;
-    &lt;div&gt;
+<pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">template</span>&gt;
+    &lt;<span style="color:#f92672">div</span>&gt;
         {{ count }}
         This is the index page.
-    &lt;/div&gt;
-&lt;/template&gt;
+    &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">template</span>&gt;
 
-&lt;script&gt;
-export default {
-    computed: {
-        count () {
-            return this.$store.state.count;
+&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+    <span style="color:#a6e22e">computed</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">count</span> () {
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span>;
         }
     }
 }
-&lt;/script&gt;
-</code></pre>
-
+&lt;/<span style="color:#f92672">script</span>&gt;
+</pre>
 <p>如果想写入计数器中的数据，不能直接写，而是要提交<code>mutations</code>。</p>
-
-<pre><code class="language-js">const store = new Vuex.Store({
-    state: {
-        count: 0
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">store</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vuex</span>.<span style="color:#a6e22e">Store</span>({
+    <span style="color:#a6e22e">state</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>
     },
-    mutations: {
-        increment (state) {
-            state.count++
+    <span style="color:#a6e22e">mutations</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">increment</span> (<span style="color:#a6e22e">state</span>) {
+            <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span><span style="color:#f92672">++</span>
         },
-        decrement (state) {
-            state.count--
+        <span style="color:#a6e22e">decrement</span> (<span style="color:#a6e22e">state</span>) {
+            <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span><span style="color:#f92672">--</span>
         }
     }
 })
-</code></pre>
-
+</pre>
 <p>我们给store添加了两个<code>mutations</code>，在组件中我们可以通过<code>commit</code>调用它：</p>
-
-<pre><code class="language-html">&lt;template&gt;
-    &lt;div&gt;
+<pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">template</span>&gt;
+    &lt;<span style="color:#f92672">div</span>&gt;
         {{ count }}
         This is the index page.
-        &lt;button @click=&#34;handleIncrement&#34;&gt;+&lt;/button&gt;
-        &lt;button @click=&#34;handleDecrement&#34;&gt;-&lt;/button&gt;
-    &lt;/div&gt;
-&lt;/template&gt;
+        &lt;<span style="color:#f92672">button</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;handleIncrement&#34;</span>&gt;+&lt;/<span style="color:#f92672">button</span>&gt;
+        &lt;<span style="color:#f92672">button</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;handleDecrement&#34;</span>&gt;-&lt;/<span style="color:#f92672">button</span>&gt;
+    &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">template</span>&gt;
 
-&lt;script&gt;
-export default {
-    computed: {
-        count () {
-            return this.$store.state.count;
+&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+    <span style="color:#a6e22e">computed</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">count</span> () {
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span>;
         }
     },
-    methods: {
-        handleIncrement () {
-            this.$store.commit(&#39;increment&#39;);
+    <span style="color:#a6e22e">methods</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">handleIncrement</span> () {
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">commit</span>(<span style="color:#e6db74">&#39;increment&#39;</span>);
         },
-        handleDecrement () {
-            this.$store.commit(&#39;decrement&#39;);
+        <span style="color:#a6e22e">handleDecrement</span> () {
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">commit</span>(<span style="color:#e6db74">&#39;decrement&#39;</span>);
         }
     }
 }
-&lt;/script&gt;
-</code></pre>
-
+&lt;/<span style="color:#f92672">script</span>&gt;
+</pre>
 <p><code>commit</code>也可以传参</p>
-
-<pre><code class="language-js">mutations: {
-    changeCount (state , n=1) {
-        state.count += n
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#a6e22e">mutations</span><span style="color:#f92672">:</span> {
+    <span style="color:#a6e22e">changeCount</span> (<span style="color:#a6e22e">state</span> , <span style="color:#a6e22e">n</span><span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>) {
+        <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">n</span>
     },
 }
-</code></pre>
-
-<pre><code class="language-html">&lt;template&gt;
-    &lt;div&gt;
+</pre><pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">template</span>&gt;
+    &lt;<span style="color:#f92672">div</span>&gt;
         {{ count }}
         This is the index page.
-        &lt;button @click=&#34;handleIncrement&#34;&gt;+&lt;/button&gt;
-        &lt;button @click=&#34;handleDecrement&#34;&gt;-&lt;/button&gt;
-        &lt;br&gt;
-        Step: &lt;input type=&#34;number&#34; v-model.number=&#34;step&#34;&gt;
-    &lt;/div&gt;
-&lt;/template&gt;
+        &lt;<span style="color:#f92672">button</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;handleIncrement&#34;</span>&gt;+&lt;/<span style="color:#f92672">button</span>&gt;
+        &lt;<span style="color:#f92672">button</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;handleDecrement&#34;</span>&gt;-&lt;/<span style="color:#f92672">button</span>&gt;
+        &lt;<span style="color:#f92672">br</span>&gt;
+        Step: &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;number&#34;</span> <span style="color:#a6e22e">v-model</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#a6e22e">number</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;step&#34;</span>&gt;
+    &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">template</span>&gt;
 
-&lt;script&gt;
-export default {
-    data () {
-        return {
-            step: 1
+&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+    <span style="color:#a6e22e">data</span> () {
+        <span style="color:#66d9ef">return</span> {
+            <span style="color:#a6e22e">step</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>
         }
     },
-    computed: {
-        count () {
-            return this.$store.state.count;
+    <span style="color:#a6e22e">computed</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">count</span> () {
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span>;
         }
     },
-    methods: {
-        handleIncrement () {
-            this.$store.commit(&#39;changeCount&#39;,this.step);
+    <span style="color:#a6e22e">methods</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">handleIncrement</span> () {
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">commit</span>(<span style="color:#e6db74">&#39;changeCount&#39;</span>,<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">step</span>);
         },
-        handleDecrement () {
-            this.$store.commit(&#39;changeCount&#39;,-this.step);
+        <span style="color:#a6e22e">handleDecrement</span> () {
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">commit</span>(<span style="color:#e6db74">&#39;changeCount&#39;</span>,<span style="color:#f92672">-</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">step</span>);
         }
     }
 }
-&lt;/script&gt;
-</code></pre>
-
+&lt;/<span style="color:#f92672">script</span>&gt;
+</pre>
 <h2>getters</h2>
 
 <p>Vuex还可以提供一个<code>getters</code>，它类似于组件的<code>computed</code>，假如我们的状态中有一个列表，业务中经常要用到取列表中的正数，但是在每一个组件中编写这个逻辑代码就太冗余了，所以可以在<code>vuex</code>的getters中写:</p>
-
-<pre><code class="language-js">getters: {
-    filteredList (state) {
-        return state.list.filter(item=&gt;item&gt;0);
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#a6e22e">getters</span><span style="color:#f92672">:</span> {
+    <span style="color:#a6e22e">filteredList</span> (<span style="color:#a6e22e">state</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">list</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">item</span>=&gt;<span style="color:#a6e22e">item</span><span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>);
     }
 }
-</code></pre>
-
+</pre>
 <p>在组件中可以这样用：
 <code>this.$store.getters.filteredList</code></p>
 
 <h2>actions</h2>
 
 <p>actions是用来做异步操作的。</p>
-
-<pre><code class="language-js">actions: {
-    asyncFunction (context) {
-        return new Promise(resolve =&gt; {
-            setTimeout(()=&gt;{
-                resolve(&#39;ok&#39;);
-            },1000)
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#a6e22e">actions</span><span style="color:#f92672">:</span> {
+    <span style="color:#a6e22e">asyncFunction</span> (<span style="color:#a6e22e">context</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Promise(<span style="color:#a6e22e">resolve</span> =&gt; {
+            <span style="color:#a6e22e">setTimeout</span>(()=&gt;{
+                <span style="color:#a6e22e">resolve</span>(<span style="color:#e6db74">&#39;ok&#39;</span>);
+            },<span style="color:#ae81ff">1000</span>)
         })
     }
 }
-</code></pre>
-
-<pre><code class="language-js">callIt () {
-    this.$store.dispatch(&#39;asyncFunction&#39;).then(res=&gt;{
-        console.log(res);
+</pre><pre style="color:#f8f8f2;background-color:#272822"><span style="color:#a6e22e">callIt</span> () {
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$store</span>.<span style="color:#a6e22e">dispatch</span>(<span style="color:#e6db74">&#39;asyncFunction&#39;</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">res</span>=&gt;{
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">res</span>);
     })
 }
-</code></pre>
-
+</pre>
 <h2>modules</h2>
 
 <p>如果状态过多，可以分模块。</p>
-
-<pre><code class="language-js">const moduleA = {
-    state: {}
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">moduleA</span> <span style="color:#f92672">=</span> {
+    <span style="color:#a6e22e">state</span><span style="color:#f92672">:</span> {}
 }
-//..
-const store = new Vuex.Store({
-    modules: {
-        a: moduleA
+<span style="color:#75715e">//..
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">store</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vuex</span>.<span style="color:#a6e22e">Store</span>({
+    <span style="color:#a6e22e">modules</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">a</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">moduleA</span>
     }
 })
-</code></pre>
-
+</pre>
 <p>子节点的getters和mutation可以接受第三个参数rootState来访问root的状态。</p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

@@ -1,4 +1,6 @@
-<html><head><title>Vue和Webpack</title></head><body><p>在前端模块化的今天，只要出现一个前端技术貌似就会和webpack挂上钩，Vue当然也是了。</p>
+<html><head><title>Vue和Webpack</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>Vue和Webpack</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-08-20 13:59:48</span><span id="categorie">vue</span></div><p>在前端模块化的今天，只要出现一个前端技术貌似就会和webpack挂上钩，Vue当然也是了。</p>
 
 <p>下面将从零开始使用wabpack搭建一个Vue小示例。</p>
 
@@ -7,8 +9,7 @@
 <p>创建项目文件夹后，先<code>npm init</code>初始化。</p>
 
 <p>然后按照如下目录创建文件：</p>
-
-<pre><code>├── dist
+<pre style="color:#f8f8f2;background-color:#272822">├── dist
 │   └── index.html
 ├── package.json
 ├── package-lock.json
@@ -16,9 +17,7 @@
 │   ├── App.vue
 │   └── index.js
 └── webpack.config.js
-</code></pre>
-
-<pre><code class="language-bash">npm i -D webpack webpack webpack-dev-server
+</pre><pre style="color:#f8f8f2;background-color:#272822">npm i -D webpack webpack webpack-dev-server
 npm i -P vue
 npm i -D vue-loader
 npm i -D vue-style-loader
@@ -30,22 +29,18 @@ npm i -D babel-core
 npm i -D babel-plugin-transform-runtime
 npm i -D babel-preset-es2015
 npm i -D babel-runtime
-</code></pre>
-
+</pre>
 <p>以上环境全部安装完毕后进行babel的配置，在项目根目录下创建<code>.babelrc</code>，写入如下内容：</p>
-
-<pre><code class="language-json">{
-    &#34;presets&#34;: [&#34;es2015&#34;],
-    &#34;plugins&#34;: [&#34;transform-runtime&#34;],
-    &#34;comments&#34;: false
+<pre style="color:#f8f8f2;background-color:#272822">{
+    <span style="color:#f92672">&#34;presets&#34;</span>: [<span style="color:#e6db74">&#34;es2015&#34;</span>],
+    <span style="color:#f92672">&#34;plugins&#34;</span>: [<span style="color:#e6db74">&#34;transform-runtime&#34;</span>],
+    <span style="color:#f92672">&#34;comments&#34;</span>: <span style="color:#66d9ef">false</span>
 }
-</code></pre>
-
+</pre>
 <p>这个配置用来解析es6，然后我们就可以在项目中用es6去编写代码了。</p>
 
 <p>在<code>webpack.config.js</code>中编写：</p>
-
-<pre><code>var path = require(&#39;path&#39;);
+<pre style="color:#f8f8f2;background-color:#272822">var path = require(&#39;path&#39;);
 var VueLoaderPlugin = require(&#39;vue-loader/lib/plugin&#39;)
 
 module.exports = {
@@ -75,63 +70,56 @@ module.exports = {
         new VueLoaderPlugin()
     ]
 }
-</code></pre>
-
+</pre>
 <p>这个代码也没啥好解释的，就是在webpack中配置入口出口和一些loader规则。</p>
 
 <p>然后编写<code>App.vue</code>，这是我们的根组件。</p>
 
 <p>vue文件分为三块，分别用<code>template</code>、<code>style</code>和<code>script</code>包裹。分别代表组件的html，样式和基于js的组件配置。</p>
-
-<pre><code class="language-html">&lt;template&gt;
-    &lt;div&gt;
+<pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">template</span>&gt;
+    &lt;<span style="color:#f92672">div</span>&gt;
         Helo,{{ name }}.
-    &lt;/div&gt;
-&lt;/template&gt;
+    &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">template</span>&gt;
 
-&lt;script&gt;
-    export default {
-        data () {
-            return {
-                name: &#39;Vue.js&#39;
+&lt;<span style="color:#f92672">script</span>&gt;
+    <span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+        <span style="color:#a6e22e">data</span> () {
+            <span style="color:#66d9ef">return</span> {
+                <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Vue.js&#39;</span>
             }
         }
     }
-&lt;/script&gt;
+&lt;/<span style="color:#f92672">script</span>&gt;
 
-&lt;style scoped&gt;&lt;/style&gt;
-</code></pre>
-
+&lt;<span style="color:#f92672">style</span> <span style="color:#a6e22e">scoped</span>&gt;&lt;/<span style="color:#f92672">style</span>&gt;
+</pre>
 <p>这代码也很简单。</p>
 
 <p>我们再看<code>index.js</code>：</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Vue</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;vue&#39;</span>
+<span style="color:#66d9ef">import</span> <span style="color:#a6e22e">App</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;./App.vue&#39;</span>
 
-<pre><code class="language-js">import Vue from &#39;vue&#39;
-import App from &#39;./App.vue&#39;
-
-new Vue({
-    el: &#39;#app&#39;,
-    render: h =&gt; h(App)
+<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vue</span>({
+    <span style="color:#a6e22e">el</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;#app&#39;</span>,
+    <span style="color:#a6e22e">render</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">h</span> =&gt; <span style="color:#a6e22e">h</span>(<span style="color:#a6e22e">App</span>)
 });
-</code></pre>
-
+</pre>
 <p>在<code>index.js</code>中引入Vue和我们编写的根组件<code>App.vue</code>，然后初始化vue实例并挂载到主页面的<code>#app</code>节点上。</p>
 
 <p>我们再看<code>dist/index.html</code>：</p>
-
-<pre><code class="language-html">&lt;!DOCTYPE html&gt;
-&lt;html lang=&#34;en&#34;&gt;
-&lt;head&gt;
-    &lt;meta charset=&#34;UTF-8&#34;&gt;
-    &lt;title&gt;&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;div id=&#34;app&#34;&gt;&lt;/div&gt;   
-    &lt;script src=&#34;./main.js&#34;&gt;&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e">&lt;!DOCTYPE html&gt;</span>
+&lt;<span style="color:#f92672">html</span> <span style="color:#a6e22e">lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;en&#34;</span>&gt;
+&lt;<span style="color:#f92672">head</span>&gt;
+    &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">charset</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;UTF-8&#34;</span>&gt;
+    &lt;<span style="color:#f92672">title</span>&gt;&lt;/<span style="color:#f92672">title</span>&gt;
+&lt;/<span style="color:#f92672">head</span>&gt;
+&lt;<span style="color:#f92672">body</span>&gt;
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;app&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;   
+    &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;./main.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</pre>
 <p>提供了一个<code>app</code>节点供vue挂载，并引入了经过webpack打包后的<code>main.js</code>文件。</p>
 
 <p>输入<code>npx webpack-dev-server --open --config webpack.config.js</code>运行，也可以在<code>package.json</code>中配置script。</p>
@@ -145,73 +133,71 @@ new Vue({
 <p>我们这次打算用组件的形式开发，把问题的输入框抽象成一个组件，然后它自己监听自己的输入事件，当输入<code>?</code>时向父组件发射<code>submit</code>事件。父组件接收到这个事件后向服务器发送请求，获取数据并渲染到页面。</p>
 
 <p><code>App.vue</code>：</p>
-
-<pre><code class="language-html">&lt;template&gt;
-    &lt;div&gt;
+<pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">template</span>&gt;
+    &lt;<span style="color:#f92672">div</span>&gt;
         I&#39;ll tell you yes or no.
-        &lt;yesorno-input @submit=&#34;answerIt&#34;&gt;&lt;/yesorno-input&gt;
+        &lt;<span style="color:#f92672">yesorno-input</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">submit</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;answerIt&#34;</span>&gt;&lt;/<span style="color:#f92672">yesorno-input</span>&gt;
         {{ message }}
-    &lt;/div&gt;
-&lt;/template&gt;
+    &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">template</span>&gt;
 
-&lt;script&gt;
-import axios from &#39;axios&#39;
-import yesornoInput from &#39;./Dialog.vue&#39;
-    export default {
-        data () {
-            return {
-                message: &#39;Waitting for you.&#39;
+&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">import</span> <span style="color:#a6e22e">axios</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;axios&#39;</span>
+<span style="color:#66d9ef">import</span> <span style="color:#a6e22e">yesornoInput</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;./Dialog.vue&#39;</span>
+    <span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+        <span style="color:#a6e22e">data</span> () {
+            <span style="color:#66d9ef">return</span> {
+                <span style="color:#a6e22e">message</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Waitting for you.&#39;</span>
             }
         },
-        components: {
-            yesornoInput  
+        <span style="color:#a6e22e">components</span><span style="color:#f92672">:</span> {
+            <span style="color:#a6e22e">yesornoInput</span>  
         },
-        methods: {
-            answerIt (question) {
-                this.message = &#39;I\&#39;m thinking...&#39;
-                axios.get(&#39;https://yesno.wtf/api&#39;).then(resp=&gt;{
-                    if(resp.data.answer){
-                       this.message = resp.data.answer; 
-                    }else{
-                        this.message = &#39;Api Error!&#39;
+        <span style="color:#a6e22e">methods</span><span style="color:#f92672">:</span> {
+            <span style="color:#a6e22e">answerIt</span> (<span style="color:#a6e22e">question</span>) {
+                <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;I\&#39;m thinking...&#39;</span>
+                <span style="color:#a6e22e">axios</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;https://yesno.wtf/api&#39;</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">resp</span>=&gt;{
+                    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">answer</span>){
+                       <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">answer</span>; 
+                    }<span style="color:#66d9ef">else</span>{
+                        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Api Error!&#39;</span>
                     }
-                }).catch(err=&gt;{
-                    this.message = &#39;Network Error!&#39;
+                }).<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">err</span>=&gt;{
+                    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Network Error!&#39;</span>
                 })
             }
         }
     }
-&lt;/script&gt;
+&lt;/<span style="color:#f92672">script</span>&gt;
 
-&lt;style scoped&gt;&lt;/style&gt;
-</code></pre>
-
+&lt;<span style="color:#f92672">style</span> <span style="color:#a6e22e">scoped</span>&gt;&lt;/<span style="color:#f92672">style</span>&gt;
+</pre>
 <p>我们使用<code>axios</code>向服务器发送请求，使用一个<code>message</code>作为用户提示和答案，并且我们可以发现组件<code>yesorno-input</code>，也就是我们要编写的子组件，它来自<code>Dialog.vue</code>，接下来我们编写这个文件。</p>
 
 <p><code>Dialog.vue</code>：</p>
+<pre style="color:#f8f8f2;background-color:#272822">&lt;<span style="color:#f92672">template</span>&gt;
+    &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text&#34;</span> <span style="color:#a6e22e">:placeholder</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;pholder&#34;</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">input</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;handleInput&#34;</span>&gt;
+&lt;/<span style="color:#f92672">template</span>&gt;
 
-<pre><code class="language-html">&lt;template&gt;
-    &lt;input type=&#34;text&#34; :placeholder=&#34;pholder&#34; @input=&#34;handleInput&#34;&gt;
-&lt;/template&gt;
-
-&lt;script&gt;
-export default {
-    data () {
-        return {
-            pholder: &#39;Ask me a question!&#39;
+&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+    <span style="color:#a6e22e">data</span> () {
+        <span style="color:#66d9ef">return</span> {
+            <span style="color:#a6e22e">pholder</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Ask me a question!&#39;</span>
         }
     },
-    methods: {
-        handleInput: function(event){
-            var question = event.target.value;
-            if(question.endsWith(&#39;?&#39;) || question.endsWith(&#39;？&#39;)){
-                this.$emit(&#39;submit&#39;,question);
+    <span style="color:#a6e22e">methods</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">handleInput</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">event</span>){
+            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">question</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">value</span>;
+            <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">question</span>.<span style="color:#a6e22e">endsWith</span>(<span style="color:#e6db74">&#39;?&#39;</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">question</span>.<span style="color:#a6e22e">endsWith</span>(<span style="color:#e6db74">&#39;？&#39;</span>)){
+                <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">$emit</span>(<span style="color:#e6db74">&#39;submit&#39;</span>,<span style="color:#a6e22e">question</span>);
             }
         }
     }
 }
-&lt;/script&gt;
-</code></pre>
-
+&lt;/<span style="color:#f92672">script</span>&gt;
+</pre>
 <p>这个组件的内容也很简单，就是监测自己的<code>input</code>并发送事件给父组件。</p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

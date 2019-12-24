@@ -1,23 +1,21 @@
-<html><head><title>VIM常用技巧</title></head><body><h1><code>.</code>命令</h1>
+<html><head><title>VIM常用技巧</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>VIM常用技巧</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-08-21 9:22:27</span><span id="categorie">Vim</span></div><h1><code>.</code>命令</h1>
 
 <p><code>.</code>命令可以重复上次的修改。</p>
 
 <p>比如我们想给每一行加上一个分号：</p>
-
-<pre><code class="language-js">var foo = 1
-var bar = &#39;a&#39;
-var foobar = foo + bar
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">foo</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">bar</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;a&#39;</span>
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">foobar</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">foo</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">bar</span>
+</pre>
 <p>我们可以使用<code>.</code>来操作，比如我们现在在最后一行，按<code>A</code>在行尾追加，之后按<code>;</code>添加分号。</p>
 
 <p>这样我们完成了一行的操作，然后我们可以退出输入模式，并按<code>k</code>上移一行，然后按<code>.</code>，这一行的行尾也被添加了分号，重复这个输入直到为所有行添加完毕。</p>
 
 <p>再看一个示例，我们想在连接字符串的两个加号前后添加空格，让代码可读性更高：</p>
-
-<pre><code class="language-js">var foo = &#34;method(&#34;+argument1+&#34;,&#34;+argument2+&#34;)&#34;;
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">foo</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;method(&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">argument1</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;,&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">argument2</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;)&#34;</span>;
+</pre>
 <p>对于这个问题，我们可以使用<code>f+</code>定位到第一个加号，然后使用<code>s</code>删除当前字符并切换到输入模式，之后输入空格 + 空格。</p>
 
 <p>这样做的好处是这可以让VIM认为是一次操作，使用<code>.</code>可以重复这次操作，我们用<code>;</code>切换到下一个<code>+</code>的位置，然后再按<code>.</code>，VIM会重复我们的操作。一直重复这个操作到所有加号都被添加了空格。</p>
@@ -29,10 +27,8 @@ var foobar = foo + bar
 <p>使用<code>&lt;C-a&gt;</code>和<code>&lt;C-x&gt;</code>可以针对行内的数字进行加减操作。</p>
 
 <p>比如使用<code>10&lt;C-a&gt;</code>，会将当前光标下的数字加十，如果当前光标下不是数字，则正向查找一个数字。</p>
-
-<pre><code class="language-css">.blog { background-position: -180px -180px }
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822">.<span style="color:#a6e22e">blog</span> { <span style="color:#66d9ef">background-position</span>: <span style="color:#ae81ff">-180</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">-180</span><span style="color:#66d9ef">px</span> }
+</pre>
 <p>假设要把上面的cs代码中的两个<code>0px</code>改成<code>-180px</code>，我们就可以用这个。</p>
 
 <p><code>180&lt;C-x&gt;w.</code>，这个输入可以完成操作，先用<code>180&lt;C-x&gt;</code>来把第一个数字修改为目标值，然后按<code>w</code>，将光标移动到下一个单词处，按<code>.</code>重复操作。</p>
@@ -223,12 +219,12 @@ var foobar = foo + bar
 <p>range用来指定大多数命令的作用范围，它的格式如下：</p>
 
 <ul>
-<li><code>1,5p</code> – 打印第一行到第五行的内容</li>
-<li><code>.,$p</code> – 打印当前行到最后一行的内容</li>
-<li><code>3p</code> – 打印第三行的内容</li>
-<li><code>p</code> – 打印当前行的内容</li>
-<li><code>%p</code> – 打印所有行内容，相当于<code>1,$p</code></li>
-<li><code>/&lt;html&gt;/</code>,<code>/&lt;\/html&gt;p</code> – 打印<code>&lt;html&gt;&lt;/html&gt;</code>标签中间的内容</li>
+<li><code>1,5p</code> -- 打印第一行到第五行的内容</li>
+<li><code>.,$p</code> -- 打印当前行到最后一行的内容</li>
+<li><code>3p</code> -- 打印第三行的内容</li>
+<li><code>p</code> -- 打印当前行的内容</li>
+<li><code>%p</code> -- 打印所有行内容，相当于<code>1,$p</code></li>
+<li><code>/&lt;html&gt;/</code>,<code>/&lt;\/html&gt;p</code> -- 打印<code>&lt;html&gt;&lt;/html&gt;</code>标签中间的内容</li>
 </ul>
 
 <h3>偏移</h3>
@@ -236,7 +232,7 @@ var foobar = foo + bar
 <p>range可以指定一个偏移，格式如下<code>{address}+n,{address+n}command</code>，如：</p>
 
 <ul>
-<li><code>/&lt;html&gt;/+1,&lt;\/html&gt;-1p</code> – 打印html标签中的内容但不包含html标签</li>
+<li><code>/&lt;html&gt;/+1,&lt;\/html&gt;-1p</code> -- 打印html标签中的内容但不包含html标签</li>
 <li><code>-1p</code>代表打印上一行的内容</li>
 </ul>
 
@@ -245,10 +241,10 @@ var foobar = foo + bar
 <p><code>:t</code>和<code>:m</code>分别是<code>:copy</code>和<code>:move</code>的缩写。</p>
 
 <ul>
-<li><code>:.t.</code> – 拷贝当前行到下一行，和<code>yyp</code>差不多，但是这个不占用寄存器</li>
-<li><code>:t.</code> – 同上</li>
-<li><code>:t$</code> – 把当前行复制到文本结尾</li>
-<li><code>:10,20t$</code> – 把10到20行复制到文件尾</li>
+<li><code>:.t.</code> -- 拷贝当前行到下一行，和<code>yyp</code>差不多，但是这个不占用寄存器</li>
+<li><code>:t.</code> -- 同上</li>
+<li><code>:t$</code> -- 把当前行复制到文本结尾</li>
+<li><code>:10,20t$</code> -- 把10到20行复制到文件尾</li>
 </ul>
 
 <p><code>m</code>和它用法一样就不解释了。</p>
@@ -257,21 +253,19 @@ var foobar = foo + bar
 
 <p>这两个命令都是把某些文本拷贝到某一行的下面，那么如果我们想拷贝到第一行可咋办呢？VIM提供了一个虚拟行0</p>
 
-<p><code>:t0</code> – 把当前行拷贝到第一行</p>
+<p><code>:t0</code> -- 把当前行拷贝到第一行</p>
 
 <h3>基于选区</h3>
 
 <p>如果当前有可视模式选中的文本，那么<code>&#39;&lt;</code>代表选中的开头位置，<code>&#39;&gt;</code>代表结尾。比如：</p>
-
-<pre><code>Shopping list
+<pre style="color:#f8f8f2;background-color:#272822">Shopping list
     Hardware Store
         Buy nails
         Buy new hammer
     Beauty Parlor
         Buy nail polish remover
         Buy nails
-</code></pre>
-
+</pre>
 <p>我们想把<code>Hardware Store</code>移动到<code>Beauty Parlor</code>下面，我们可以这么做：</p>
 
 <ol>
@@ -285,21 +279,21 @@ var foobar = foo + bar
 <h2>在指定范围上执行普通模式命令</h2>
 
 <p>我们需要给100行js代码结尾添加分号，虽然可以用<code>.</code>进行重复普通命令，但是还是需要按200多次按键，不过在VIM中我们可以在指定范围上执行普通模式命令。</p>
-
-<pre><code>var foo = 1
+<pre style="color:#f8f8f2;background-color:#272822">var foo = 1
 var bar = 2
 bar baz = 3
 var foobarbaz = foo + bar + baz
 //...96 lines ignored
-</code></pre>
-
+</pre>
 <p>我们可以这样做：
-1. <code>gg</code> – 移动到文件首
-2. <code>A;</code> – 在行尾添加<code>;</code>
+1. <code>gg</code> -- 移动到文件首
+2. <code>A;</code> -- 在行尾添加<code>;</code>
 3. <code>:$normal .</code></p>
 
 <p>还可以更简单：
 - <code>:%normal A;</code></p>
 
 <p>这个命令执行时会自动把每一行的光标放在行首。</p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

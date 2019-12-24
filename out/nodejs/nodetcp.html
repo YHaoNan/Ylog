@@ -1,4 +1,6 @@
-<html><head><title>NodeJS中的网络操作</title></head><body><p>
+<html><head><title>NodeJS中的网络操作</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>NodeJS中的网络操作</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-07-17 08:49:31</span><span id="categorie">NodeJS</span></div><p>
 唉，睁眼睛看一会书就要去练车的感觉真不怎么样，没啥时间干自己的事，本来计划好的假期学习计划几乎被全盘推翻。哈哈，还好十九号就考科二了，考完之后就不会去得那么勤了。
 
 这几天在驾校无聊等待的过程中一直在刷《NodeJS高级编程》，然后回家还要把所有活都干完后，有空了才能把代码实现一遍，所以也一直没写笔记，今天补点，嗯补一点。
@@ -38,7 +40,8 @@ What is your name
 <h2>创建一个mini的聊天服务器
 </h2>
 
-<p><code>javascript
+<p>
+<code>js
 var socketList = [];
 require(&#39;net&#39;).createServer((socket)=&gt;{
     
@@ -89,7 +92,7 @@ Hi
 <h2>构建tcp客户端实现更强大的聊天室
 </h2>
 
-<p><code>javascript
+<p><code>js
 const printUsage = require(&#39;./usage&#39;).printUsage;
 
 const host = &#39;127.0.0.1&#39;;
@@ -132,7 +135,7 @@ function convertSingleLine(string){
 <code>createConnection</code>返回了一个连接对象，我们监听这个连接对象发出的事件，它的事件其实和tcp服务器差不多。
 
 接下来放上服务器端的代码：
-<code>javascript
+<code>js
 const getCommand = require(&#39;./command&#39;).getCommand;
 const commandCallback = {
     rename:(socket,newnick)=&gt;{
@@ -236,7 +239,7 @@ server.on(&#39;listening&#39;,()=&gt;{
 
 然后就是其他的工具类的代码：
 <code>command.js</code>
-<code>javascript
+<code>js
 &#34;use strict&#34;;
 exports.__esModule = true;
 function getCommand(commandStr) {
@@ -256,7 +259,7 @@ exports.getCommand = getCommand;
 </code>
 
 <code>usage.js</code>
-<code>javascript
+<code>js
 function printUsage(){
     console.log(&#39;Command:\n\t1. /rename &lt;Name&gt; -- Modify your nickname in chatroom.\n\t 2. /exit or /quit -- Exit from chatroom.\n\t 3. /help -- Show usage.\nAdmin Command:\n\t4. /gname &lt;any string&gt; -- Get your nickname.Note that the option &lt;any string&gt; is must exits.\n\t&#39;+
     &#39;1. /kickout &lt;Name&gt; -- Kickout a user by nickname.\n\t2. /close -- Close chatroom.\n\t3. /post &lt;Message&gt; -- Post some message.&#39;);
@@ -314,4 +317,6 @@ Oh,got it ! Thanks!
 1563328661593 says : Nothing... xD
 </code>
 </p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

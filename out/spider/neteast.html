@@ -1,11 +1,11 @@
-<html><head><title>分析网易云的JS加密</title></head><body><h3>起源</h3>
+<html><head><title>分析网易云的JS加密</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>分析网易云的JS加密</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-05-24 12:15:27</span><span id="categorie">爬虫</span></div><h3>起源</h3>
 
 <p>最近想搞一个工具App，需要网易云的数据，所以要分析网易云的WebAPI。之前也写过很多爬虫，所以刚开始我是信心满满的，直到看见网易云的请求都是这个样子的：</p>
-
-<pre><code>params: wVJpucPzzULoYCnoTXT809yc/SIgz8dCFVc6YBqaUhNzJ2YF2y5uA/vfByF1bQbLwI/5c9iIa3aHaEN2OMe+siNTh+MLWS6nqJKpn0P28SJ1BlO5uE7t8UPte8uOb3AoSLMtHkZ3Wqp8HmAhpVuc+u5xMoECk19oLTDGxYMjeBB1Y19gLKszcHi+thmTIn8N2BvR2EDVfS2CWWUvQsD2msJghlh9/eglF8uz4aKPA8NeSXccF8HxieefeWsJ6//jk0wYQMAaxeDqIJQiekFFMw==
+<pre style="color:#f8f8f2;background-color:#272822">params: wVJpucPzzULoYCnoTXT809yc/SIgz8dCFVc6YBqaUhNzJ2YF2y5uA/vfByF1bQbLwI/5c9iIa3aHaEN2OMe+siNTh+MLWS6nqJKpn0P28SJ1BlO5uE7t8UPte8uOb3AoSLMtHkZ3Wqp8HmAhpVuc+u5xMoECk19oLTDGxYMjeBB1Y19gLKszcHi+thmTIn8N2BvR2EDVfS2CWWUvQsD2msJghlh9/eglF8uz4aKPA8NeSXccF8HxieefeWsJ6//jk0wYQMAaxeDqIJQiekFFMw==
 encSecKey: d91f190d99d06d2400e0817cfbb7abfae5de48ea26091b42cb62eef0379350babd87078dfd3c9ac36eeef02e2e46dc9335e965bf2a9b3c99773caf31003dd4e0a5cdc710e2e44a26355231a44d7647d92b92d68c2e3a84951d36cedf92139241a8444a874b6b175f16c7401fea31770b0ebc6d2f09b444dd5807f38db1f53873
-</code></pre>
-
+</pre>
 <p>我就崩溃了，这肯定都是通过JS加密的，以前应对JS加密我从来都是用Selenium这种库+无头浏览器，效率底下还占资源，关键是应用场景有限，只是爬取数据用它可以，但是我要搞一个App的话，用Selenium就不行了。</p>
 
 <p>于是我只能分析它的JS代码，但是一般看见的js为了加载速度都是经过压缩的，网易云当然也是，几万行在一个文件里，变量名都是abcdefg，用开发者工具弄可能不太方便，效率也不高，而且你想改js代码应该是实现不了(虽说可以打断点)。于是百度了一下，找到了一个思路，就是用代理拦截对应的js请求，替换成本地的，这样就可以在本地的编辑器里编辑和阅读JS了。</p>
@@ -15,21 +15,17 @@ encSecKey: d91f190d99d06d2400e0817cfbb7abfae5de48ea26091b42cb62eef0379350babd870
 <h3>前戏</h3>
 
 <p>用到以下工具：</p>
-
-<pre><code>Charles(Windows下用Fiddler也可以 或者可以用Mono Fiddler)
+<pre style="color:#f8f8f2;background-color:#272822">Charles(Windows下用Fiddler也可以 或者可以用Mono Fiddler)
 一个浏览器(Chrome Dev)
 一个编辑器(VSCode)
-</code></pre>
-
+</pre>
 <p>打开Charles，点<code>Help-&gt;SSL Proxying-&gt;Save Charles Root Certificate</code>保存Charles的根证书，因为我们要抓取的东西是HTTPS的，所以要用到。</p>
 
 <p>然后保存的证书是cer的，我们要转成crt并且复制到<code>/usr/share/ca-certificates</code>，并安装证书。</p>
-
-<pre><code class="language-bash">openssl x509 -inform der -in CharlesRoot.cer -outform pem -out CharlesRoot.crt
+<pre style="color:#f8f8f2;background-color:#272822">openssl x509 -inform der -in CharlesRoot.cer -outform pem -out CharlesRoot.crt
 sudo cp CharlesRoot.crt /usr/share/ca-certificates
 sudo dpkg-reconfigure ca-certificates //选择ask,勾选CharlesRoot.crt并确认
-</code></pre>
-
+</pre>
 <p>然后点击<code>Proxy-&gt;Proxy Setting</code>，标签Proxies下勾选Enable transparent HTTP proxying。</p>
 
 <p>设置你的系统或浏览器使用你的代理端口，然后好像还得把你的证书安装到浏览器里，反正我的Chrome安装了。之后你就能看到浏览器收发的所有数据包了，你点开一个URL之后会发现全都是<code>Unknow</code>，这是因为你没开启该URL的HTTPS代理，右键该URL之后选择<code>Enable SSL Proxying</code>。</p>
@@ -65,35 +61,29 @@ sudo dpkg-reconfigure ca-certificates //选择ask,勾选CharlesRoot.crt并确认
 <p>替换完之后我们开始分析JS，先看哪个参数？先看长的，<code>encSecKey</code>这个，我们在整个JS文件里搜索它。</p>
 
 <p>发现一共就三处，最后两处在同一个地方，并且在那还发现了params，所以我们从这开始分析。</p>
-
-<pre><code class="language-javascript">var bUP3x = window.asrsea(JSON.stringify(i4m), brC5H([&#34;流泪&#34;, &#34;强&#34;]), brC5H(WU0x.md), brC5H([&#34;爱心&#34;, &#34;女孩&#34;, &#34;惊恐&#34;, &#34;大笑&#34;]));
-e4i.data = k4o.cz5E({
-    params: bUP3x.encText,
-    encSecKey: bUP3x.encSecKey
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">bUP3x</span> <span style="color:#f92672">=</span> window.<span style="color:#a6e22e">asrsea</span>(<span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">i4m</span>), <span style="color:#a6e22e">brC5H</span>([<span style="color:#e6db74">&#34;流泪&#34;</span>, <span style="color:#e6db74">&#34;强&#34;</span>]), <span style="color:#a6e22e">brC5H</span>(<span style="color:#a6e22e">WU0x</span>.<span style="color:#a6e22e">md</span>), <span style="color:#a6e22e">brC5H</span>([<span style="color:#e6db74">&#34;爱心&#34;</span>, <span style="color:#e6db74">&#34;女孩&#34;</span>, <span style="color:#e6db74">&#34;惊恐&#34;</span>, <span style="color:#e6db74">&#34;大笑&#34;</span>]));
+<span style="color:#a6e22e">e4i</span>.<span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">k4o</span>.<span style="color:#a6e22e">cz5E</span>({
+    <span style="color:#a6e22e">params</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">bUP3x</span>.<span style="color:#a6e22e">encText</span>,
+    <span style="color:#a6e22e">encSecKey</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">bUP3x</span>.<span style="color:#a6e22e">encSecKey</span>
 })
-</code></pre>
-
+</pre>
 <p>基本可以肯定，这里就是我们form data里看到的参数，这两个参数都来自于<code>bUP3x</code>，而这个变量是调用了<code>window.asrsea</code>的返回值，所以我们应该去asrsea中找，搜索一下会找到如下一段代码：</p>
-
-<pre><code class="language-javascript">!function() {
-    //...省略一些代码
-    window.asrsea = d,
-    window.ecnonasr = e
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#f92672">!</span><span style="color:#66d9ef">function</span>() {
+    <span style="color:#75715e">//...省略一些代码
+</span><span style="color:#75715e"></span>    window.<span style="color:#a6e22e">asrsea</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">d</span>,
+    window.<span style="color:#a6e22e">ecnonasr</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">e</span>
 }();
-</code></pre>
-
+</pre>
 <p>可以看到这里把d作为了<code>window.asrsea</code>的值，那么d是啥？d其实就在省略的代码里面，这里面有五个函数，分别是a b c d e，我们首先着重看d。</p>
-
-<pre><code class="language-javascript">function d(d, e, f, g) {
-    var h = {}
-        , i = a(16);
-    return h.encText = b(d, g),
-    h.encText = b(h.encText, i),
-    h.encSecKey = c(i, e, f),
-    h
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">d</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">e</span>, <span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">g</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">h</span> <span style="color:#f92672">=</span> {}
+        , <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">a</span>(<span style="color:#ae81ff">16</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encText</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">g</span>),
+    <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encText</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>(<span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encText</span>, <span style="color:#a6e22e">i</span>),
+    <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encSecKey</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">e</span>, <span style="color:#a6e22e">f</span>),
+    <span style="color:#a6e22e">h</span>
 }
-</code></pre>
-
+</pre>
 <p>d有4个参数，是刚才我们分析的<code>bUP3x</code>那里传进去的，我们先不考虑它是啥，等分析完这段在讨论。我们先把它当成已知的。</p>
 
 <p>可以看到这里对于encText和encSecKey都赋值了，根据之前的代码我们可以知道，encText就是formdata里的params，encSecKey就是encSecKey。所以这个方法就是加密的核心。</p>
@@ -101,71 +91,59 @@ e4i.data = k4o.cz5E({
 <p>它对encText做了两次赋值，都是调用b，我们也可以看做<code>b(b(d,g),i)</code>，我个人感觉这样看比分开看清晰，因为这样看它们之间的关系比较强。</p>
 
 <p>我们看看b的代码。</p>
-
-<pre><code class="language-javascript">function b(a, b) {
-    var c = CryptoJS.enc.Utf8.parse(b)
-        , d = CryptoJS.enc.Utf8.parse(&#34;0102030405060708&#34;)
-        , e = CryptoJS.enc.Utf8.parse(a)
-        , f = CryptoJS.AES.encrypt(e, c, {
-        iv: d,
-        mode: CryptoJS.mode.CBC
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">b</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">CryptoJS</span>.<span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">Utf8</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">b</span>)
+        , <span style="color:#a6e22e">d</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">CryptoJS</span>.<span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">Utf8</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#e6db74">&#34;0102030405060708&#34;</span>)
+        , <span style="color:#a6e22e">e</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">CryptoJS</span>.<span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">Utf8</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">a</span>)
+        , <span style="color:#a6e22e">f</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">CryptoJS</span>.<span style="color:#a6e22e">AES</span>.<span style="color:#a6e22e">encrypt</span>(<span style="color:#a6e22e">e</span>, <span style="color:#a6e22e">c</span>, {
+        <span style="color:#a6e22e">iv</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">d</span>,
+        <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">CryptoJS</span>.<span style="color:#a6e22e">mode</span>.<span style="color:#a6e22e">CBC</span>
     });
-    return f.toString()
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">toString</span>()
 }
-</code></pre>
-
+</pre>
 <p>b其实比较简单了，不过经过代码压缩之后看起来很乱，我们可以在脑海中给它修改一下，不难看出就是把第二个参数作为key，把一个字符串<code>0102030405060708</code>作为偏移量，然后对第一个参数进行AES加密，模式是CBC。</p>
 
 <p>我们再看一下d中对b的调用，是这样的<code>b(b(d,g),i)</code>，也就是说先用参数g作为key对参数d进行一次aes加密，再把i作为key和结果进行aes加密，d和g是外面传过来的，那i是哪来的？</p>
 
 <p>d中有这样一行</p>
-
-<pre><code class="language-javascript">var h = {}
-    , i = a(16);
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">h</span> <span style="color:#f92672">=</span> {}
+    , <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">a</span>(<span style="color:#ae81ff">16</span>);
+</pre>
 <p>i是调用了a之后来的，我们继续分析a函数。</p>
-
-<pre><code class="language-javascript">function a(a) {
-    var d, e, b = &#34;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&#34;, c = &#34;&#34;;
-    for (d = 0; a &gt; d; d += 1)
-        e = Math.random() * b.length,
-        e = Math.floor(e),
-        c += b.charAt(e);
-    return c
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">a</span>(<span style="color:#a6e22e">a</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">e</span>, <span style="color:#a6e22e">b</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&#34;</span>, <span style="color:#a6e22e">c</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
+    <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">d</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">a</span> <span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">d</span>; <span style="color:#a6e22e">d</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>)
+        <span style="color:#a6e22e">e</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">random</span>() <span style="color:#f92672">*</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">length</span>,
+        <span style="color:#a6e22e">e</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">floor</span>(<span style="color:#a6e22e">e</span>),
+        <span style="color:#a6e22e">c</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">charAt</span>(<span style="color:#a6e22e">e</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>
 }
-</code></pre>
-
+</pre>
 <p>一眼就能看出这是生成了一个长度为a的随机字符串，而a即d中传过来的参数16，也就是说函数a返回长度为16的随机字符串。</p>
 
 <p>现在我们就知道encText是怎么来的了，我们知道params就是encText，所以我们已经解开了一个参数的加密过程了，但是还有一个疑问，就是d方法的参数都是啥，我们还不知道。我们回到调用<code>window.asrsea</code>的地方(因为通过分析我们知道d就是window.asrsea)去看看。</p>
-
-<pre><code class="language-javascript">var bUP3x = window.asrsea(JSON.stringify(i4m), brC5H([&#34;流泪&#34;, &#34;强&#34;]), brC5H(WU0x.md), brC5H([&#34;爱心&#34;, &#34;女孩&#34;, &#34;惊恐&#34;, &#34;大笑&#34;]));
-e4i.data = k4o.cz5E({
-    params: bUP3x.encText,
-    encSecKey: bUP3x.encSecKey
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">bUP3x</span> <span style="color:#f92672">=</span> window.<span style="color:#a6e22e">asrsea</span>(<span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">i4m</span>), <span style="color:#a6e22e">brC5H</span>([<span style="color:#e6db74">&#34;流泪&#34;</span>, <span style="color:#e6db74">&#34;强&#34;</span>]), <span style="color:#a6e22e">brC5H</span>(<span style="color:#a6e22e">WU0x</span>.<span style="color:#a6e22e">md</span>), <span style="color:#a6e22e">brC5H</span>([<span style="color:#e6db74">&#34;爱心&#34;</span>, <span style="color:#e6db74">&#34;女孩&#34;</span>, <span style="color:#e6db74">&#34;惊恐&#34;</span>, <span style="color:#e6db74">&#34;大笑&#34;</span>]));
+<span style="color:#a6e22e">e4i</span>.<span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">k4o</span>.<span style="color:#a6e22e">cz5E</span>({
+    <span style="color:#a6e22e">params</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">bUP3x</span>.<span style="color:#a6e22e">encText</span>,
+    <span style="color:#a6e22e">encSecKey</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">bUP3x</span>.<span style="color:#a6e22e">encSecKey</span>
 })
-</code></pre>
-
+</pre>
 <p>还是这段代码，我们发现第一个参数是一个由i4m变的json字符串，第二个第四个应该都是写死的，我也不知道为啥是这些，我也没分析，它都写死了，我们也不用浪费时间到这个上面。</p>
 
 <p>我们再看看第三个参数，是<code>WU0x.md</code>，找到这个变量的定义，其实也是一个写死的字符串，而且很长，我们不难看出第2，3，4个变量都是一些emoji的名字，不过为啥要加，我们无从得知，我们也不需要得知，既然它写死了，我们就直接复制，写爬虫就是这样嘛，能走捷径就走捷径。</p>
 
 <p>我们加两个console.log，把经过这些emoji经过<code>brC5H</code>之后的值打印出来。顺便打印出第一个参数。</p>
-
-<pre><code class="language-javascript">console.log(JSON.stringify(i4m));
-console.log(brC5H([&#34;流泪&#34;, &#34;强&#34;]), brC5H(WU0x.md), brC5H([&#34;爱心&#34;, &#34;女孩&#34;, &#34;惊恐&#34;, &#34;大笑&#34;]));
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">i4m</span>));
+<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">brC5H</span>([<span style="color:#e6db74">&#34;流泪&#34;</span>, <span style="color:#e6db74">&#34;强&#34;</span>]), <span style="color:#a6e22e">brC5H</span>(<span style="color:#a6e22e">WU0x</span>.<span style="color:#a6e22e">md</span>), <span style="color:#a6e22e">brC5H</span>([<span style="color:#e6db74">&#34;爱心&#34;</span>, <span style="color:#e6db74">&#34;女孩&#34;</span>, <span style="color:#e6db74">&#34;惊恐&#34;</span>, <span style="color:#e6db74">&#34;大笑&#34;</span>]));
+</pre>
 <p>刷新下网页，重新请求，然后看控制台的输出，一次搜索操作<code>window.asrsea</code>方法被调用了多次，第一个参数是改变的，剩下三个参数的值是恒定不变的，而且我们可以看出<code>brC5H</code>方法是个加密方法或者是编码方法，不过因为它值被写死了，导致每次加密的值都一样，我们也就不用分析这个方法了。</p>
 
 <p><img src="http://nsimg.cn-bj.ufileos.com/jt5.png" alt="IMG"/></p>
 
 <p>既然调用了多次，我们要知道哪次调用返回的结果才是我们发出请求的formdata中的参数，于是继续添加log，看看每次<code>window.asrsea</code>的返回值。</p>
-
-<pre><code class="language-javascript">console.log(bUP3x);
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">bUP3x</span>);
+</pre>
 <p>window.asrsea返回值<br/>
 <img src="http://nsimg.cn-bj.ufileos.com/jt6.png" alt="window.asrsea返回值"/></p>
 
@@ -173,39 +151,32 @@ console.log(brC5H([&#34;流泪&#34;, &#34;强&#34;]), brC5H(WU0x.md), brC5H([&#3
 <img src="http://nsimg.cn-bj.ufileos.com/jt7.png" alt="formdata参数"/></p>
 
 <p>我们可以找到这一次的返回值和参数对应上了，于是我们就看一看这次调用时它的可变参数，也就是第一个参数是什么。</p>
-
-<pre><code class="language-json">{&#34;hlpretag&#34;:&#34;&lt;span class=\&#34;s-fc7\&#34;&gt;&#34;,&#34;hlposttag&#34;:&#34;&lt;/span&gt;&#34;,&#34;s&#34;:&#34;asdfasd&#34;,&#34;type&#34;:&#34;1&#34;,&#34;offset&#34;:&#34;0&#34;,&#34;total&#34;:&#34;true&#34;,&#34;limit&#34;:&#34;30&#34;,&#34;csrf_token&#34;:&#34;&#34;}
-</code></pre>
-
+<pre style="color:#f8f8f2;background-color:#272822">{<span style="color:#f92672">&#34;hlpretag&#34;</span>:<span style="color:#e6db74">&#34;&lt;span class=\&#34;s-fc7\&#34;&gt;&#34;</span>,<span style="color:#f92672">&#34;hlposttag&#34;</span>:<span style="color:#e6db74">&#34;&lt;/span&gt;&#34;</span>,<span style="color:#f92672">&#34;s&#34;</span>:<span style="color:#e6db74">&#34;asdfasd&#34;</span>,<span style="color:#f92672">&#34;type&#34;</span>:<span style="color:#e6db74">&#34;1&#34;</span>,<span style="color:#f92672">&#34;offset&#34;</span>:<span style="color:#e6db74">&#34;0&#34;</span>,<span style="color:#f92672">&#34;total&#34;</span>:<span style="color:#e6db74">&#34;true&#34;</span>,<span style="color:#f92672">&#34;limit&#34;</span>:<span style="color:#e6db74">&#34;30&#34;</span>,<span style="color:#f92672">&#34;csrf_token&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>}
+</pre>
 <p>一个json字符串，没经过格式化的，我们立马可以看出它就是我们的搜索参数，s即搜索关键字(我瞎打的)，offset即偏移位置，limit返回多少个。</p>
 
 <p>那么我们原封不懂的把他copy下来备用，然后别忘了，encSecKey这个参数我们还没有研究呢。</p>
 
 <p>继续回到函数d。</p>
-
-<pre><code class="language-javascript">function d(d, e, f, g) {
-    var h = {}
-        , i = a(16);
-    return h.encText = b(d, g),
-    h.encText = b(h.encText, i),
-    h.encSecKey = c(i, e, f),
-    h
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">d</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">e</span>, <span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">g</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">h</span> <span style="color:#f92672">=</span> {}
+        , <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">a</span>(<span style="color:#ae81ff">16</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encText</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">g</span>),
+    <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encText</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>(<span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encText</span>, <span style="color:#a6e22e">i</span>),
+    <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">encSecKey</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">e</span>, <span style="color:#a6e22e">f</span>),
+    <span style="color:#a6e22e">h</span>
 }
-</code></pre>
-
+</pre>
 <p>可以看到encSecKey调用了函数c，并且把i和ef传了进去，我们知道i是随机变量，e和f是写死的，那么我们不妨做出大胆的猜想，我们每次把随机字符串写死那么encSecKey应该返回的是同一个东西。</p>
 
 <p>这样做的话，参数e和f我们不用管了，也就是说我们关心的就是d和g，d我们知道了是那个json字符串，g的话我们去之前打印的结果里复制下就行了。efg这三个参数是不会变的。</p>
-
-<pre><code>//这是g
+<pre style="color:#f8f8f2;background-color:#272822">//这是g
 0CoJUm6Qyw8W8jud
-</code></pre>
-
+</pre>
 <p>而且encText中也用到了i，写死的话，我们生成16位随机字符串的算法也不用写了。</p>
 
 <p>理一理头绪开始编码。</p>
-
-<pre><code>//准备一下这个json串，因为我们构造搜索关键字和返回结果时都用它控制
+<pre style="color:#f8f8f2;background-color:#272822">//准备一下这个json串，因为我们构造搜索关键字和返回结果时都用它控制
 {&#34;hlpretag&#34;:&#34;&lt;span class=\&#34;s-fc7\&#34;&gt;&#34;,&#34;hlposttag&#34;:&#34;&lt;/span&gt;&#34;,&#34;s&#34;:&#34;$searchKeyWord&#34;,&#34;type&#34;:&#34;1&#34;,&#34;offset&#34;:&#34;0&#34;,&#34;total&#34;:&#34;true&#34;,&#34;limit&#34;:&#34;30&#34;,&#34;csrf_token&#34;:&#34;&#34;}
 
 //把上面的$searchKeyWord替换成想搜索的就行了
@@ -222,55 +193,49 @@ console.log(brC5H([&#34;流泪&#34;, &#34;强&#34;]), brC5H(WU0x.md), brC5H([&#3
 encSecKey： 0c76e2da719b4d3ab2ec44ccdd5100266f4b34cf6d7cd09c4de472aea01de6b1d476918225680680ddee41e02f1a5f19feee10bdea88c0b5bd7661ce5ab06212c7c53cce91d15ff6bc85e995251bb0ad6e240c9f2d4ae3d0631facc1dae8abc24703a66be6b98cd3250e6da7973e0286f7b6e3c1b474c8356961fc2126dc9ea7
 
 i： pIuxxPXdZv2yDPbr
-</code></pre>
-
+</pre>
 <h3>代码</h3>
 
 <p>因为我考虑弄的是Android的app，但是由于测试，先用Python实现了一下</p>
+<pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e"># 主文件</span>
+<span style="color:#f92672">import</span> requests <span style="color:#f92672">as</span> req
+<span style="color:#f92672">import</span> netease_crypto
+<span style="color:#f92672">import</span> json
 
-<pre><code class="language-python"># 主文件
-import requests as req
-import netease_crypto
-import json
+search_str <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Midsummer Madness</span><span style="color:#e6db74">&#34;</span>
 
-search_str = &#34;Midsummer Madness&#34;
-
-query_body = &#39;{&#34;hlpretag&#34;:&#34;&lt;span class=\\&#34;s-fc7\\&#34;&gt;&#34;,&#34;hlposttag&#34;:&#34;&lt;/span&gt;&#34;,&#34;s&#34;:&#34;&#39;+search_str+&#39;&#34;,&#34;type&#34;:&#34;1&#34;,&#34;offset&#34;:&#34;0&#34;,&#34;total&#34;:&#34;true&#34;,&#34;limit&#34;:&#34;30&#34;,&#34;csrf_token&#34;:&#34;&#34;}&#39;
-url = &#34;https://music.163.com/weapi/cloudsearch/get/web?csrf_token=&#34;
-params = netease_crypto.d(query_body)
-data = {
-    &#34;params&#34;:params,
-    &#34;encSecKey&#34;:&#34;0c76e2da719b4d3ab2ec44ccdd5100266f4b34cf6d7cd09c4de472aea01de6b1d476918225680680ddee41e02f1a5f19feee10bdea88c0b5bd7661ce5ab06212c7c53cce91d15ff6bc85e995251bb0ad6e240c9f2d4ae3d0631facc1dae8abc24703a66be6b98cd3250e6da7973e0286f7b6e3c1b474c8356961fc2126dc9ea7&#34;
+query_body <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">hlpretag</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&lt;span class=</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">s-fc7</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt;</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">,</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">hlposttag</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&lt;/span&gt;</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">,</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">s</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">+</span>search_str<span style="color:#f92672">+</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">,</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">type</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">1</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">,</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">offset</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">0</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">,</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">total</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">true</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">,</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">limit</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">30</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">,</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">csrf_token</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span>
+url <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">https://music.163.com/weapi/cloudsearch/get/web?csrf_token=</span><span style="color:#e6db74">&#34;</span>
+params <span style="color:#f92672">=</span> netease_crypto<span style="color:#f92672">.</span>d(query_body)
+data <span style="color:#f92672">=</span> {
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">params</span><span style="color:#e6db74">&#34;</span>:params,
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">encSecKey</span><span style="color:#e6db74">&#34;</span>:<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">0c76e2da719b4d3ab2ec44ccdd5100266f4b34cf6d7cd09c4de472aea01de6b1d476918225680680ddee41e02f1a5f19feee10bdea88c0b5bd7661ce5ab06212c7c53cce91d15ff6bc85e995251bb0ad6e240c9f2d4ae3d0631facc1dae8abc24703a66be6b98cd3250e6da7973e0286f7b6e3c1b474c8356961fc2126dc9ea7</span><span style="color:#e6db74">&#34;</span>
 }
-resp = req.post(url=url,data=data)
-jo = json.loads(resp.text)
-for song in jo[&#39;result&#39;][&#39;songs&#39;]:
-    print(&#34;歌曲：&#34;+song[&#39;name&#39;],end=&#39;   艺术家：&#39;)
-    for artist in song[&#39;ar&#39;]:
-        print(artist[&#39;name&#39;],end=&#39; / &#39;)
-    print()
-</code></pre>
+resp <span style="color:#f92672">=</span> req<span style="color:#f92672">.</span>post(url<span style="color:#f92672">=</span>url,data<span style="color:#f92672">=</span>data)
+jo <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(resp<span style="color:#f92672">.</span>text)
+<span style="color:#66d9ef">for</span> song <span style="color:#f92672">in</span> jo[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">result</span><span style="color:#e6db74">&#39;</span>][<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">songs</span><span style="color:#e6db74">&#39;</span>]:
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">歌曲：</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">+</span>song[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">name</span><span style="color:#e6db74">&#39;</span>],end<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">   艺术家：</span><span style="color:#e6db74">&#39;</span>)
+    <span style="color:#66d9ef">for</span> artist <span style="color:#f92672">in</span> song[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">ar</span><span style="color:#e6db74">&#39;</span>]:
+        <span style="color:#66d9ef">print</span>(artist[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">name</span><span style="color:#e6db74">&#39;</span>],end<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74"> / </span><span style="color:#e6db74">&#39;</span>)
+    <span style="color:#66d9ef">print</span>()
+</pre><pre style="color:#f8f8f2;background-color:#272822"><span style="color:#75715e"># netease_crypto</span>
+<span style="color:#f92672">import</span> base64
+<span style="color:#f92672">from</span> Crypto.Cipher <span style="color:#f92672">import</span> AES
 
-<pre><code class="language-python"># netease_crypto
-import base64
-from Crypto.Cipher import AES
-
-def aes_en(key,msg):
-    cryptor = AES.new(key,AES.MODE_CBC,b&#39;0102030405060708&#39;)
-    num = (16-len(msg)%16)
-    msg = msg + (chr(num)*num)
-    ret = cryptor.encrypt(msg)
-    return base64.b64encode(ret).decode()
-def d(d):
-    ret_1 = aes_en(&#39;0CoJUm6Qyw8W8jud&#39;,d)
-    print(ret_1)
-    ret_2 = aes_en(&#39;pIuxxPXdZv2yDPbr&#39;,ret_1)
-    return ret_2
-</code></pre>
-
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">aes_en</span>(key,msg):
+    cryptor <span style="color:#f92672">=</span> AES<span style="color:#f92672">.</span>new(key,AES<span style="color:#f92672">.</span>MODE_CBC,<span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">0102030405060708</span><span style="color:#e6db74">&#39;</span>)
+    num <span style="color:#f92672">=</span> (<span style="color:#ae81ff">16</span><span style="color:#f92672">-</span>len(msg)<span style="color:#f92672">%</span><span style="color:#ae81ff">16</span>)
+    msg <span style="color:#f92672">=</span> msg <span style="color:#f92672">+</span> (chr(num)<span style="color:#f92672">*</span>num)
+    ret <span style="color:#f92672">=</span> cryptor<span style="color:#f92672">.</span>encrypt(msg)
+    <span style="color:#66d9ef">return</span> base64<span style="color:#f92672">.</span>b64encode(ret)<span style="color:#f92672">.</span>decode()
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">d</span>(d):
+    ret_1 <span style="color:#f92672">=</span> aes_en(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">0CoJUm6Qyw8W8jud</span><span style="color:#e6db74">&#39;</span>,d)
+    <span style="color:#66d9ef">print</span>(ret_1)
+    ret_2 <span style="color:#f92672">=</span> aes_en(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">pIuxxPXdZv2yDPbr</span><span style="color:#e6db74">&#39;</span>,ret_1)
+    <span style="color:#66d9ef">return</span> ret_2
+</pre>
 <p>结果：</p>
-
-<pre><code>歌曲：Midsummer Madness   艺术家：88rising / Higher Brothers / Rich Brian / Joji / AUGUST 08 / 
+<pre style="color:#f8f8f2;background-color:#272822">歌曲：Midsummer Madness   艺术家：88rising / Higher Brothers / Rich Brian / Joji / AUGUST 08 / 
 歌曲：Midsummer Madness(Howie X Remix)   艺术家：孔昊龑Howie X / 88rising / Joji / Higher Brothers / Rich Brian / AUGUST 08 / 
 歌曲：Midsummer Madness   艺术家：88rising / Higher Brothers / Rich Brian / Joji / AUGUST 08 / 
 歌曲：Midsummer Madness (KRANE Remix)   艺术家：88rising / KRANE / 
@@ -294,8 +259,7 @@ def d(d):
 歌曲：88rising-Midsummer Madness（叵测Cc Remix）   艺术家：叵测Cc / 
 歌曲：88rising-midsummer madness（叵测Cc Remix）   艺术家：叵测Cc / 
 ...省略
-</code></pre>
-
+</pre>
 <h3>值得注意的地方</h3>
 
 <p>别看我说的这么顺，其实实际我自己分析的时候没那么顺，我弄了一上午呢，把坑记录一下，下次注意。</p>
@@ -304,13 +268,13 @@ def d(d):
 
 <p>首先网易云的aes加密代码使用<code>CryptoJS</code>，我是没找到它的文档。。。我也不知道这是个啥库，因为我没做过JS开发。</p>
 
-<p>由于AES加密的CBC算法需要加密字符串长度是16的倍数，所以就涉及到补齐问题，我寻思补齐应该是补’\0’，看各路大佬们写的代码也都是’\0’，但是<code>CryptoJS</code>默认的补齐方法采用一个叫<code>pkcs7</code>的补齐标准，所以不是补’\0’，而是补<code>16-len(text)%16</code>对应在ascii表中的字符，所以应该这样写。</p>
-
-<pre><code class="language-python">num = (16-len(text)%16)
-text = text + (chr(text)*num)
-</code></pre>
-
+<p>由于AES加密的CBC算法需要加密字符串长度是16的倍数，所以就涉及到补齐问题，我寻思补齐应该是补&#39;\0&#39;，看各路大佬们写的代码也都是&#39;\0&#39;，但是<code>CryptoJS</code>默认的补齐方法采用一个叫<code>pkcs7</code>的补齐标准，所以不是补&#39;\0&#39;，而是补<code>16-len(text)%16</code>对应在ascii表中的字符，所以应该这样写。</p>
+<pre style="color:#f8f8f2;background-color:#272822">num <span style="color:#f92672">=</span> (<span style="color:#ae81ff">16</span><span style="color:#f92672">-</span>len(text)<span style="color:#f92672">%</span><span style="color:#ae81ff">16</span>)
+text <span style="color:#f92672">=</span> text <span style="color:#f92672">+</span> (chr(text)<span style="color:#f92672">*</span>num)
+</pre>
 <h3>参考</h3>
 
 <p><a href="https://blog.csdn.net/huuinn/article/details/82762952">ubuntu18.04中charles安装及使用-huuinn</a></p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>

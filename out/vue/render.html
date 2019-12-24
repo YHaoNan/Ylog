@@ -1,7 +1,9 @@
-<html><head><title>Vue组件的render函数</title></head><body><p>
+<html><head><title>Vue组件的render函数</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="stylesheet" href="../../themes/default/public.css"/><link rel="stylesheet" href="../../themes/default/post.css"/></head><body><div id="title">
+	<span>Vue组件的render函数</span>
+<div></div></div><div id="categorie-bar"><span id="time">2019-08-17 8:27:00</span><span id="categorie">Vue</span></div><p>
 之前我们都是用<code>template</code>来给组件提供一个模板，但是这并不一定适合所有情况，而且它最后也会被编译为<code>render</code>的形式，效率比直接用<code>render</code>稍低。
 
-<code>render</code>函数提供了一个虚拟dom，也就是上一篇中提到的那个东西，你可以用这个虚拟dom来创建节点，绑定数据…
+<code>render</code>函数提供了一个虚拟dom，也就是上一篇中提到的那个东西，你可以用这个虚拟dom来创建节点，绑定数据...
 
 直接用<code>render</code>写的代码会比较冗余，因为是用js而不是html，所以说<code>render</code>函数要看情况使用。
 
@@ -105,4 +107,6 @@
 我们上面的render代码创建了一个a标签，并且绑定了href为<code>&#39;#&#39;+this.title</code>，用于点击后自动修改url，并且监听他的鼠标事件，去修改<code>isHover</code>，用于显示锚点图标，很多博客站的标题锚点功能都是这样的，包括本博客，就是鼠标进入标题时显示一个图标（本实例中是#号）。然后创建标题节点，作为a的子节点，这里可以访问到组件的作用域，所以<code>&#39;h&#39;+this.level</code>是可以的，然后给它两个子节点，一个是<code>this.title</code>，就是传入的标题，一个是<code>span</code>，这个<code>span</code>是在<code>render</code>函数最开始判断<code>isHover</code>动态创建的，因为<code>render</code>函数中不能用<code>v-if</code>这种命令，所以只能用js提供的结构体来满足功能。
 
 </p>
-</body></html>
+<div id="copyright">Author: LILPIG<br/>
+The copyright belongs to the author. Please indicate the source of reprint.
+<br/>Powerd by Ylog, Theme by default</div></body></html>
